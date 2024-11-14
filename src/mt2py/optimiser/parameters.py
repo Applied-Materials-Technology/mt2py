@@ -56,11 +56,34 @@ class Group():
             raise RuntimeError('Duplicate parameters found. Please remove any duplicates.')
 
 
-    def to_array(self):
-        pass
+    def to_array(self)->np.array:
+        """Return an array of parameters for each of the optimised parameters
+        """
+        
+        out_list = []
+        for parameter in self.opt_parameters:
+            out_list.append(parameter.value)
+        
+        return np.array(out_list)
 
-    def update(self):
-        pass
+
+    def update(self,new_values:Sequence):
+        """Update the values of each parameter with a new one
+        i.e. for the next optimisation generation.
+
+        Args:
+            new_values (Sequence): New values for each of the optimised parameters.
+
+        Raises:
+            RuntimeError: Length mistmatch between new and old values.
+        """
+        
+        if len(new_values) != len(self.opt_parameters):
+            raise RuntimeError('Length mismatch between new and old values.')
+        
+        for i,parameter in enumerate(self.opt_parameters):
+            parameter.update(new_values[i])
+
 
     def __str__(self):
         #print a nicely formated list of parameters etc.
