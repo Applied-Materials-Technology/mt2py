@@ -27,5 +27,5 @@ p0 = Parameter('Materials/elasticity/youngs_modulus','moose',1E9,True,(0.8E9,1.2
 g = Group([p0])
 
 # Call to run once
-call_single(g,moose_cl,oc)
+out_file = call_single(g,moose_cl,oc)
 

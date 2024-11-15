@@ -20,7 +20,7 @@ def call_single(parameter_group:Group,command_line_config:CommandLineConfig,outp
     arg_list = command_line_config.return_call_args(parameter_group,output_config)
     subprocess.run(arg_list,shell=False)
 
-    return output_config.generate_path()
+    return output_config.generate_path(command_line_config.source)
 
 
 

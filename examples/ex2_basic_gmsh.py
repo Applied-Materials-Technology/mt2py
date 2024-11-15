@@ -8,19 +8,18 @@ from pathlib import Path
 
 # Set up output config
 parent = Path('examples/outputs')
-sources = ['moose']
-#extensions = ['e']
-output_names = ['Outputs/file_base']
+sources = ['gmsh']
+output_names = ['-exportpath']
 
 oc = OutputConfig(parent,sources,output_names)
 
 # Set up command line
-moose_cl = CommandLineConfig('moose','sloth-opt',Path('scripts/ex1_linear_elastic.i'),'-i')
+gmsh_cl = CommandLineConfig('gmsh','python',Path('scripts/ex2_gmsh.py'))
 
-p0 = Parameter('Materials/elasticity/youngs_modulus','moose',1E9,True,(0.8E9,1.2E9))
-g = Group([p0])
+# The python gmsh api file must be set up to use the parameters below. 
+p0 = Parameter('-p0','gmsh',-5,True,(-10,-5))
+p1 = Parameter('-p1','gmsh',5.1,True,(5,10))
+g = Group([p0,p1])
 
-#print(moose_cl.return_call_args(g,oc))
-
-call_single(g,moose_cl,oc)
+output_path = call_single(g,gmsh_cl,oc)
 

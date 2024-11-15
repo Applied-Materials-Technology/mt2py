@@ -16,3 +16,4 @@ trame-vtk
 trame-vuetify
 ipywidgets
 netCDF4
+gmsh
