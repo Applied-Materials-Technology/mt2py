@@ -43,7 +43,7 @@ class Caller():
 
         # If there is a gmsh run it.
         if self.gmsh_clc is not None:
-            subprocess.run(self.gmsh_clc.return_call_args(parameter_group,self.output_dir),shell=False)
+            result = subprocess.run(self.gmsh_clc.return_call_args(parameter_group,self.output_dir),capture_output=True,shell=False)
         
         arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
         
@@ -55,7 +55,7 @@ class Caller():
         #arg_list.append('--redirect-stdout')
         
         result = subprocess.run(arg_list,capture_output=True,shell=False)
-
+        #if '*** ERROR ***' in result:
         filename = self.moose_clc.source + '-' + str(parameter_group.id)
         output_path = self.output_dir / filename
 

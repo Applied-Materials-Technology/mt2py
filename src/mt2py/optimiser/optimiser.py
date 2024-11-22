@@ -32,6 +32,7 @@ class MooseOptimisationRun():
         self._termination = termination
         self._cost_function = cost_function
         self._data_filter = data_filter
+        self._debug = False
         
         #Extract bounds
         lb=[]
