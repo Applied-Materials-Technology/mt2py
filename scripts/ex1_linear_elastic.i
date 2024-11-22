@@ -23,11 +23,15 @@
     []
 []
 
-[Modules/TensorMechanics/Master]
-    [all]
+[Physics]
+    [SolidMechanics]
+      [QuasiStatic]
+        [all]
         add_variables = true
         generate_output = 'vonmises_stress strain_xx strain_yy strain_xy strain_zz'
     []
+  []
+[]
 []
 
 

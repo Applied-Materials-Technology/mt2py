@@ -22,5 +22,24 @@ def call_single(parameter_group:Group,command_line_config:CommandLineConfig,outp
 
     return output_config.generate_path(command_line_config.source)
 
+class Caller():
 
+    def __init__(self,moose_clc:CommandLineConfig,output_config:OutputConfig, gmsh_clc = None):
+        
+        self.moose_clc = moose_clc
+        self.gmsh_clc = gmsh_clc
+        self.output_config = output_config
+        self.index = 0
 
+    def call_single(self,parameter_group: Group):
+
+        # If there is a gmsh run it.
+        if self.gmsh_clc is not None:
+            subprocess.run(self.gmsh_clc.return_call_args(parameter_group,self.output_config),shell=False)
+        
+        arg_list = self.moose_clc.return_call_args(parameter_group,self.output_config)
+        arg_list.append('Mesh/file={}.msh'.format(str(self.output_config.generate_path(self.gmsh_clc.source))))
+        print(arg_list)
+        subprocess.run(arg_list,shell=False)
+
+        return self.output_config.generate_path(self.moose_clc.source)

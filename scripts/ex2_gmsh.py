@@ -77,7 +77,7 @@ gmsh.model.geo.synchronize()
 
 #gmsh.model.mesh.generate(2)
 
-ov = gmsh.model.geo.extrude([(2,s1),(2,s2)],0,0,gaugeThickness,[1,0],recombine=True)
+ov = gmsh.model.geo.extrude([(2,s1),(2,s2)],0,0,gaugeThickness,[1,1],recombine=True)
 gmsh.model.geo.synchronize()
 
 gmsh.option.setNumber("Mesh.ElementOrder", 2)
