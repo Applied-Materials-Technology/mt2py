@@ -36,7 +36,7 @@ class Parameter():
 
     def __str__(self):
 
-        return '{} parameter: {} = {}, bounds = {}, opt = {}'.format(self.source,self.name,self.value,self.bounds,self.opt)
+        return '{} parameter: {} = {}, bounds = {}, opt = {}'.format(self.source,self.name,self.value,self.bounds,self.opt_flag)
         
 
 class Group():
@@ -52,6 +52,7 @@ class Group():
                 self.opt_parameters.append(parameter)
 
         self.id = id
+        self.n_var = len(self.opt_parameters)
         
         #Check for duplicate names, not allowed
         if len(temp_names) != len(set(temp_names)):
@@ -89,7 +90,12 @@ class Group():
 
     def __str__(self):
         #print a nicely formated list of parameters etc.
-        pass
+        output_str = 'Parameter Group with: \n'
+        for parameter in self.all_parameters:
+            output_str = output_str + parameter.__str__() + '\n'
+
+        return output_str[:-1]
+
 
     def report(self):
         # generate a machine readable string of the parameters

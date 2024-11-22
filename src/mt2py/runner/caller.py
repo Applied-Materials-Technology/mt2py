@@ -7,6 +7,7 @@ from pathlib import Path
 from mt2py.reader.exodus import ExodusReader
 from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
 from mt2py.spatialdata.spatialdata import SpatialData
+import os
 
 class Caller():
 
@@ -51,7 +52,9 @@ class Caller():
             output_path = self.output_dir / filename
             arg_list.append('Mesh/file={}.msh'.format(str(output_path)))
         
-        subprocess.run(arg_list,shell=False)
+        #arg_list.append('--redirect-stdout')
+        
+        result = subprocess.run(arg_list,capture_output=True,shell=False)
 
         filename = self.moose_clc.source + '-' + str(parameter_group.id)
         output_path = self.output_dir / filename
@@ -126,3 +129,13 @@ class Caller():
             f_list=[pp.get() for pp in processes]
             
         return f_list
+    
+
+    def clear_output_dir(self):
+
+        if self.output_dir.exists:
+            all_files = os.listdir(self.output_dir)
+
+            for file in all_files:
+                if not '.pickle' in file and not '.log' in file:
+                    os.remove(self.output_dir / file)

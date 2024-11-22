@@ -25,6 +25,7 @@ g = Group([p0])
 
 # Call to run once
 c = Caller(parent,moose_cl)
+c.clear_output_dir()
 out_file = c.call_single(g)
 
 print('Output located at:')
