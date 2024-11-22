@@ -72,7 +72,7 @@ class Caller():
             processes=[]
             for p_group in parameter_groups:
                 processes.append(pool.apply_async(self.call_single, (p_group,))) # tuple is important, otherwise it unpacks strings for some reason
-                f_list=[pp.get() for pp in processes]
+            f_list=[pp.get() for pp in processes]
             
         return f_list
     
@@ -123,6 +123,6 @@ class Caller():
             processes=[]
             for output_file in output_file_list:
                 processes.append(pool.apply_async(self.read_single, (output_file,))) # tuple is important, otherwise it unpacks strings for some reason
-                f_list=[pp.get() for pp in processes]
+            f_list=[pp.get() for pp in processes]
             
         return f_list

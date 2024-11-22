@@ -32,9 +32,7 @@ out_file = c.call_single(g)
 print('Output located at:')
 print(str(out_file))
 
-exodus_reader = ExodusReader(out_file)
-sim_data = exodus_reader.read_all_sim_data()
-out_data= simdata_to_spatialdata(sim_data)
+out_data= c.read_single(out_file)
 
 out_data.plot()
 
