@@ -4,16 +4,18 @@ from mt2py.runner.config import CommandLineConfig
 from mt2py.runner.caller import Caller
 import numpy as np
 from pathlib import Path
+from mt2py.reader.exodus import ExodusReader
+from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
 
 
-# ****** EXAMPLE 1b ********
+# ****** EXAMPLE 1 ********
 # This runs a basic linear elastic moose script. 
 # The moose input is modified via the command line
-# Run models in parallel
 # 
 
 # Set up output config
 parent = Path('examples/outputs')
+sources = 'moose'
 output_name = 'Outputs/file_base'
 
 # Set up command line
@@ -21,20 +23,18 @@ moose_cl = CommandLineConfig('moose','sloth-opt',Path('scripts/ex1_linear_elasti
 
 # Create some parameters
 p0 = Parameter('Materials/elasticity/youngs_modulus','moose',1E9,True,(0.8E9,1.2E9))
-g1 = Group([p0],id=0)
+g = Group([p0])
 
-p1 = Parameter('Materials/elasticity/youngs_modulus','moose',1.2E9,True,(0.8E9,1.2E9))
-g2 = Group([p1],id=1)
-
-g3 = Group([p1],id=2)
-
-g= [g1,g2,g3]
 # Call to run once
 c = Caller(parent,moose_cl)
-c.n_threads = 2
-out_file = c.call_parallel(g)
+out_file = c.call_single(g)
 
-print('Output files are located:')
-for f in out_file:
-    print(str(f)+'.e')
+print('Output located at:')
+print(str(out_file))
+
+exodus_reader = ExodusReader(out_file)
+sim_data = exodus_reader.read_all_sim_data()
+out_data= simdata_to_spatialdata(sim_data)
+
+out_data.plot()
 
