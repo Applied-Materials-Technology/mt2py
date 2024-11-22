@@ -41,7 +41,7 @@ class Parameter():
 
 class Group():
 
-    def __init__(self, parameter_list:Sequence[Parameter]):
+    def __init__(self, parameter_list:Sequence[Parameter],id=0):
         
         self.all_parameters = parameter_list
         self.opt_parameters = []
@@ -50,6 +50,8 @@ class Group():
             temp_names.append(parameter.name+parameter.source)
             if parameter.opt_flag:
                 self.opt_parameters.append(parameter)
+
+        self.id = id
         
         #Check for duplicate names, not allowed
         if len(temp_names) != len(set(temp_names)):

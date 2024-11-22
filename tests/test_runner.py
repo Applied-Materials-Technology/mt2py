@@ -1,7 +1,6 @@
 from mt2py.optimiser.parameters import Parameter
 from mt2py.optimiser.parameters import Group
 from mt2py.runner.config import CommandLineConfig
-from mt2py.runner.config import OutputConfig
 import pytest
 import numpy as np
 from pathlib import Path
@@ -10,9 +9,10 @@ def test_parameter_init():
     source = 'gmsh'
     command = 'python'
     file_path = Path('tests/test_parameter.py')
+    output_name = '-exportpath'
     
     with pytest.raises(FileNotFoundError):
-        CommandLineConfig(source,command,file_path)
+        CommandLineConfig(source,command,file_path,output_name)
     
     
 def test_arg_list():
@@ -25,34 +25,16 @@ def test_arg_list():
 
     command = 'python'
     file_path = Path('tests/test_parameters.py')
-    gmsh_clc = CommandLineConfig(source,command,file_path)
+    output_name = '-exportpath'
+    gmsh_clc = CommandLineConfig(source,command,file_path,output_name)
 
     parent = Path('examples/outputs')
-    sources = ['gmsh']
-    output_names = ['exportpath']
-
-    oc = OutputConfig(parent,sources,output_names)
     
-    target = [command,'tests/test_parameters.py','b=8.2','c=10.1','exportpath=examples/outputs/gmsh-0']
+    target = [command,'tests/test_parameters.py','b=8.2','c=10.1','-exportpath=examples/outputs/gmsh-0']
 
-    assert np.all(gmsh_clc.return_call_args(g,oc)==target)
+    assert np.all(gmsh_clc.return_call_args(g,parent)==target)
 
-    gmsh_clc = CommandLineConfig(source,command,file_path,input_tag='-i')
-    target = [command,'-i','tests/test_parameters.py','b=8.2','c=10.1','exportpath=examples/outputs/gmsh-0']
-    assert np.all(gmsh_clc.return_call_args(g,oc)==target)
+    gmsh_clc = CommandLineConfig(source,command,file_path,output_name,input_tag='-i')
+    target = [command,'-i','tests/test_parameters.py','b=8.2','c=10.1','-exportpath=examples/outputs/gmsh-0']
+    assert np.all(gmsh_clc.return_call_args(g,parent)==target)
 
-
-def test_outputconfig():
-    parent = Path('examples/outputs')
-    sources = ['gmsh']
-    output_names = ['exportpath']
-
-    oc = OutputConfig(parent,sources,output_names)
-    with pytest.raises(ValueError):
-        oc.generate_path('moose')
-    
-    test_path = Path('examples/outputs/gmsh-0')
-    assert oc.generate_path('gmsh') == test_path
-
-    test_arg = 'exportpath=examples/outputs/gmsh-0'
-    assert oc.return_arg('gmsh') == test_arg
