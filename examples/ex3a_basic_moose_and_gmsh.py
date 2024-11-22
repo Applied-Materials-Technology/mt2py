@@ -5,6 +5,10 @@ from mt2py.runner.caller import Caller
 import numpy as np
 from pathlib import Path
 
+# ****** EXAMPLE 3a ********
+# This runs both a gmsh and moose script.
+# 
+
 # Set up output config
 parent = Path('/home/rspencer/projects/mt2py/examples/outputs')
 

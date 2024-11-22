@@ -6,6 +6,12 @@ import numpy as np
 from pathlib import Path
 import copy
 
+# ****** EXAMPLE 3d ********
+# This runs both a gmsh and moose script.
+# Runs are completed in parallel
+# Same as 3c, but with read command
+# 
+
 # Set up output config
 parent = Path('/home/rspencer/projects/mt2py/examples/outputs')
 

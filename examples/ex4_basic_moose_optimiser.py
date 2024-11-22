@@ -11,13 +11,14 @@ from pymoo.termination.default import DefaultSingleObjectiveTermination
 
 
 # ****** EXAMPLE 4 ********
-# This runs a basic linear elastic moose script. 
-# The moose input is modified via the command line
-# 
+# This runs a material optimisation using just a moose script
+# The model is linear elastic and has a maximum displacement of 
+# 0.0446mm when the elastic modulus is 1E9 for a peak load of 5E7
+# The optimisation runs until convergence, determined by the 
+# termination object. 
 
 # Set up output config
 parent = Path('examples/outputs')
-sources = 'moose'
 output_name = 'Outputs/file_base'
 
 # Set up command line
@@ -29,14 +30,14 @@ g = Group([p0])
 
 caller = Caller(parent,moose_cl)
 caller.n_threads = 4
-# Set up optimisation
 
+# Set up optimisation
 termination = DefaultSingleObjectiveTermination(
-    xtol = 1e-3,
-    cvtol = 1e-3,
-    ftol = 1e-3,
+    xtol = 1e-4,
+    cvtol = 1e-4,
+    ftol = 1e-4,
     period = 5,
-    n_max_gen = 20
+    n_max_gen = 50
 )
 
 # Define an objective function
@@ -45,6 +46,7 @@ def displacement_match(data,endtime,external_data):
     disp_y = data.data_fields['displacement'].data[:,1,-1]
     
     return np.abs(np.max(disp_y)-0.0446297)
+
 cost = CostFunction([displacement_match],None)
 
 algorithm = PSO(
@@ -52,7 +54,7 @@ pop_size=4,
 save_history = True
 )
 
-mor = MooseOptimisationRun('Test',g,caller,algorithm,termination,cost)
+mor = MooseOptimisationRun('Ex4',g,caller,algorithm,termination,cost)
 
 mor.run(30)
 

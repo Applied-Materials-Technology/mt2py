@@ -9,6 +9,14 @@ from pathlib import Path
 from pymoo.termination.default import DefaultSingleObjectiveTermination
 from pymoo.algorithms.soo.nonconvex.pso import PSO
 
+
+# ****** EXAMPLE 5 ********
+# This runs a geometry optimisation using a moose and gmsh script
+# The model is linear elastic and has a peak stress of 7.09749E7
+# when the neckwidth is 0.8.
+# The optimisation runs until convergence, determined by the 
+# termination object. 
+
 # Set up output config
 parent = Path('/home/rspencer/projects/mt2py/examples/outputs')
 

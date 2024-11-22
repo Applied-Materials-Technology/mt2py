@@ -8,10 +8,10 @@ from mt2py.reader.exodus import ExodusReader
 from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
 
 
-# ****** EXAMPLE 1 ********
+# ****** EXAMPLE 1b ********
 # This runs a basic linear elastic moose script. 
 # The moose input is modified via the command line
-# 
+# This is the same as example 1a, but with the addition of a read command at the end.
 
 # Set up output config
 parent = Path('examples/outputs')

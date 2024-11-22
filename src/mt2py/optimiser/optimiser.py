@@ -66,7 +66,7 @@ class MooseOptimisationRun():
         print('------------------------------------------------')
         print('              All Input Parameters              ')
 
-        
+        print(self._parameter_group)        
         for n_gen in range(num_its):
             #Check if termination criteria has been met. 
             if not self._algorithm.has_next():
