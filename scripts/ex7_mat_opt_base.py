@@ -27,33 +27,31 @@ import argparse
 # This example uses a model that is run in the main script 
 # as the input.
 
-#%% Create Command Line Parser
+# Create Command Line Parser
 parser = argparse.ArgumentParser("Config Parse")
 parser.add_argument("config", help="The YAML config file for this run.", type=str)
 args = parser.parse_args()
 
-#%% Read YAML Config
+# Read YAML Config
 with open(args.config, mode="rt", encoding="utf-8") as file:
     config = yaml.safe_load(file)
 
 
-#%% Import 'DIC'_data
+# Import Data to optimise against.
+# Real data will likely need a coordinate alignment
+# to the model coordinate system.
 
 exodus_reader = ExodusReader(Path(config['external_data']))
 sim_data = exodus_reader.read_all_sim_data()
 model_data= simdata_to_spatialdata(sim_data)
 
-#%% Setup Material Model Optimisation
-
+# Setup Material Model Optimisation
 parent = Path(config['parent'])
 moose_cl = CommandLineConfig(config['moose_config']['name'],
                              config['moose_config']['command'],
                              Path(config['moose_config']['input_file']),
                              config['moose_config']['output_name'],
                              config['moose_config']['input_tag'])
-
-
-#print(config['parameters'])
 
 parameters = []
 for p in config['parameters']:
@@ -75,9 +73,8 @@ print(g)
 
 
 # Set termination criteria for optimisation
-#termination = get_termination("n_gen", 30)
 termination = DefaultSingleObjectiveTermination(
-    xtol = 1e-3, # Movement in design space < 1um
+    xtol = 1e-3, 
     cvtol = 1e-4,
     ftol = 1e-4,
     period = 3,
@@ -86,22 +83,34 @@ termination = DefaultSingleObjectiveTermination(
 
 # Define an objective function
 def displacement_match(data,endtime,external_data):
-    # Want to get the displacement at final timestep to be close to 0.0446297
+    # The displacement field at the last step must match
+    # the one in the given model. This is passed in via the 
+    # external_data
+    # Care must be taken to ensure time steps between model
+    # and experiment match up. 
+    # This function can be as complex as required.
+
+    # Get the known model displacements
     input_disp_y = external_data.data_fields['displacement'].data[:,1,-1]
+    # Get the candidate model displacements
     disp_y = data.data_fields['displacement'].data[:,1,-1]
     
+    # Calculate and return the euclidean distance between each 
+    # point in the known and candidate models.
     return np.sqrt(np.sum(np.power(input_disp_y-disp_y,2)))
 
 # Instance cost function
 cost = CostFunction([displacement_match],None,model_data)
 
+# Initialise the algorithm, in this case PSO.
 algorithm = PSO(
 pop_size=config['pop_size'],
 save_history = True
 )
 
+# Create the optimisation run
 mor = MooseOptimisationRun('Ex7',g,caller,algorithm,termination,cost)
 
-#%%
+# Call the run for a number of generations. 
 mor.run(config['n_generations'])
 

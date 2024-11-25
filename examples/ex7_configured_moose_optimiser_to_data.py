@@ -16,9 +16,9 @@ from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
 # This uses the data from a run to calculate the cost function.
 
 # The configuration for the optimisation is given in 
-# scripts/ex6_base_config.yaml
+# scripts/ex7_base_config.yaml
 
-# Most of the complexity is in examples/ex6_configured_moose_optimiser.py
+# Most of the complexity is in examples/ex7_configured_moose_optimiser_to_data.py
 # This script just runs the file with the .yaml config as an
 # arguement.
 
@@ -39,6 +39,8 @@ g = Group([p0])
 caller = Caller(parent,moose_cl)
 caller.n_threads = 4
 
+# Run the model.
+# The YAML config file knows which one to look for.
 output_file = caller.call_single(g)
 
 args = ['python',
