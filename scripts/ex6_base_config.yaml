@@ -1,0 +1,26 @@
+parent: /home/rspencer/projects/mt2py/examples/outputs
+external_data: /home/rspencer/moose_work/Geometry_Optimisation/mat_opt/baseline_mat.e
+moose_config: 
+  name: moose
+  command: sloth-opt
+  input_file: scripts/ex1_linear_elastic.i
+  input_tag: -i
+  output_name: Outputs/file_base
+gmsh_config:
+  name: gmsh
+  command: python
+  input_file: 
+  input_tag: 
+  output_name: -exportpath
+parameters:
+  - 
+    name: Materials/elasticity/youngs_modulus
+    source: moose
+    value: 1E9
+    opt_flag: True
+    lower_bound: 0.8E9
+    upper_bound: 1.2E9   
+n_threads: 4
+pop_size: 4
+n_generations: 30
+run_name: Ex6

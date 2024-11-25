@@ -7,22 +7,22 @@ from typing import Sequence
 from pathlib import Path
 import multiprocessing as mp
 
-from pycoatl.spatialdata.spatialdata import SpatialData
-from pycoatl.spatialdata.importsimdata import simdata_to_spatialdata
-from pycoatl.spatialdata.importdicedata import simdata_dice_to_spatialdata
-from pycoatl.spatialdata.tensorfield import rank_two_field
-from pycoatl.spatialdata.tensorfield import vector_field
+from mt2py.spatialdata.spatialdata import SpatialData
+from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
+from mt2py.spatialdata.importdicedata import simdata_dice_to_spatialdata
+from mt2py.spatialdata.tensorfield import rank_two_field
+from mt2py.spatialdata.tensorfield import vector_field
 
 from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import Delaunay
 from scipy import interpolate
 import pyvista as pv
 
-from mooseherder import ExodusReader
+from mt2py.reader.exodus import ExodusReader
 
-from pyvale.imagesim.imagedefopts import ImageDefOpts
-from pyvale.imagesim.cameradata import CameraData
-import pyvale.imagesim.imagedef as sid
+#from pyvale.imagesim.imagedefopts import ImageDefOpts
+#from pyvale.imagesim.cameradata import CameraData
+#import pyvale.imagesim.imagedef as sid
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 import subprocess

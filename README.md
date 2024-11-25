@@ -8,6 +8,8 @@ Materials Testing 2.0 using Python
 $ pip install mt2py
 ```
 
+Requires the MOOSE FE package here - https://github.com/idaholab/moose and GMsh - https://gmsh.info/
+
 ## Usage
 
 - TODO

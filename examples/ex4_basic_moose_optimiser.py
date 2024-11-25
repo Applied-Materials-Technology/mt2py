@@ -17,12 +17,11 @@ from pymoo.termination.default import DefaultSingleObjectiveTermination
 # The optimisation runs until convergence, determined by the 
 # termination object. 
 
-# Set up output config
+
 parent = Path('examples/outputs')
-output_name = 'Outputs/file_base'
 
 # Set up command line
-moose_cl = CommandLineConfig('moose','sloth-opt',Path('scripts/ex1_linear_elastic.i'),output_name,'-i')
+moose_cl = CommandLineConfig('moose','sloth-opt',Path('scripts/ex1_linear_elastic.i'),'Outputs/file_base','-i')
 
 # Create some parameters
 p0 = Parameter('Materials/elasticity/youngs_modulus','moose',1E9,True,(0.8E9,1.2E9))
