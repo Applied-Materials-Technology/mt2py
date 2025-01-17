@@ -137,6 +137,14 @@ class SpatialData():
         self.rotate_fields()
         self.metadata['transformations'].append(self.transformation_matrix)
 
+    def rot90(self):
+        """Rotate the XY plane 90 degrees (i.e. around the z axis)
+        """
+        rot_mat = np.array([[0,-1,0],
+                            [1,0,0],
+                            [0,0,1]])
+        self.rotate_data(rot_mat)
+
     def rotate_fields(self) -> None:
         """Rotates the underlying vector/tensor fields.
         Must be used after align.
@@ -390,45 +398,70 @@ class SpatialData():
             print('Not all fields required. Run get_hydrostatic_stress and get_equivalent_stress')
  
 
-    def plot(self,data_field='displacement',component=[1],time_step = -1 ,*args,**kwargs):
-        """Use pyvista's built in methods to plot data
+    def plot(self,data_field='displacement',component=[1],time_step = -1,spacing=5 ,*args,**kwargs):
+        """Plot the data using pyvista's built in tools.
 
         Args:
-            step (int): Time step to plot
-            field ('str'): Field to plot, defaults to v
+            sel (_type_): _description_
+            data_field (str, optional): _description_. Defaults to 'displacement'.
+            component (list, optional): _description_. Defaults to [1].
+            time_step (int, optional): _description_. Defaults to -1.
+            ax_divs (int,optional): Closest tick spacing on x and y axes
         """
-        mesh_data = self.get_mesh_component(data_field,component,time_step)
-        x_length = mesh_data.bounds[1] -mesh_data.bounds[0]
-        y_length = mesh_data.bounds[3] -mesh_data.bounds[2]
 
-        
-        #mesh_data.plot(scalars=data_field+str(component),cpos='xy',*args,**kwargs)
-        if y_length>=x_length:
-            pl = pv.Plotter(window_size=[768,1024])
-        else:
-            pl = pv.Plotter(window_size=[1024,768])
-        pl.add_mesh(mesh_data,scalars=data_field+str(component),*args,**kwargs)
-        pl.view_xy()
-        pl.remove_scalar_bar()
-        pl.enable_parallel_projection()
-        
-        if y_length>=x_length:
-            pl.add_scalar_bar(title=data_field+'\n'+str(component),vertical=True,position_x=0.85,position_y = 0.2,label_font_size = 20,title_font_size=20)
-        else: 
-            pl.add_scalar_bar(title=data_field+'\n'+str(component),vertical=False,position_x=0.2,position_y = 0.2,label_font_size = 20,title_font_size=20)
-        #pl.update_scalar_bar_range([100,180])
-        pl.add_ruler(
-            pointa= [mesh_data.bounds[0], mesh_data.bounds[2] - 0.1, 0.0],
-            pointb=[mesh_data.bounds[1], mesh_data.bounds[2] - 0.1, 0.0],
-            label_format = '%2.0f',
-            font_size_factor = 0.8,
-            title="X Distance [mm]")
-        pl.add_ruler(
-            pointa= [mesh_data.bounds[0], mesh_data.bounds[3] - 0.1, 0.0],
-            pointb=[mesh_data.bounds[0], mesh_data.bounds[2] - 0.1, 0.0],
-            label_format = '%2.0f',
-            font_size_factor = 0.8,
-            title="Y Distance [mm]")
-        pl.add_text('Time: {:6.2f}, Load: {:6.2f}'.format(self.time[time_step],self.load[time_step]))
+        mesh_data = self.get_mesh_component(data_field,component,time_step)
+        # Nicely format the title
+        df = data_field.replace('_',' ')
+        comp_dict = {0:'x',
+                    1:'y',
+                    2:'z'}
+
+        comp_name = ''
+        for comp in component:
+            comp_name+=(comp_dict[comp])
+
+        sb_title = df.title() + ' ' + comp_name
+        pl = pv.Plotter()
+        sba = {'vertical':True,
+            'bold':False,
+            'title':sb_title,
+            'label_font_size':18,
+            'title_font_size':18,
+            'position_x':0.8,'position_y':0.2}
+
+        t_string = 'Time: {:6.2f}, Load: {:6.2f}'.format(self.time[time_step],self.load[time_step])
+        pl.add_text(t_string,font_size=12,position='upper_edge')
+        pl.add_mesh(mesh_data,scalar_bar_args=sba,*args,**kwargs)#,clim=[-1E-3,0.016])
+        #pl.add_mesh(fe_strain,show_scalar_bar = False)#,clim=[-1E-3,0.016])
+        #pl.add_scalar_bar('Name', vertical=True, position_x=0.8, position_y=0.2)
+        nearest = spacing
+        #pl.view_xy()
+        #pl.camera_position ='xy'
+        #pl.camera.zoom(0.5)
+        def myround(x, base=5):
+            return base * np.sign(x)*np.ceil(np.abs(x)/base)
+        xl = myround(mesh_data.bounds[0],nearest)
+        xu = myround(mesh_data.bounds[1],nearest)
+        yl = myround(mesh_data.bounds[2],nearest)
+        yu = myround(mesh_data.bounds[3],nearest)
+
+        #pl.camera.tight(padding=0.2,view='xy',adjust_render_window=False)
+        pl.camera_position = 'xy'
+        pl.camera.SetParallelProjection(True)
+        pl.camera.zoom(0.8)
+        pl.show_bounds(mesh = mesh_data,
+                    bounds=[xl,xu,yl,yu,0,0],
+                    #axes_ranges=[xl,xu,yl,yu,0,0],
+                    n_xlabels=int(((xu-xl)/nearest)+1),
+                    n_ylabels=int(((yu-yl)/nearest)+1),
+                    xtitle='X [mm]',
+                    ytitle='Y [mm]',
+                    font_size=18,
+                    #use_2d=True,
+                    use_3d_text=False,
+                    location='front',
+                    #padding= 0.1 
+                    )  
+
         pl.show()
 
