@@ -214,11 +214,22 @@ class rank_two_field(tensor_field_base):
         """
         #Presumes that plane stress or something has been run.
         output_strains = np.zeros((self.n_points,9,self.n_steps))
+        vec1 = np.zeros((self.n_points,3,self.n_steps))
+        vec2 = np.zeros_like(vec1)
+        vec3 = np.zeros_like(vec1)
         for i in range(self.n_steps):
             eigvals,eigvecs = np.linalg.eig(np.reshape(self.data[:,:,i],(-1,3,3)))
-            eigvals = np.sort(eigvals[0])[::-1] # Reorder to give max first
-            output_strains[:,::4,i] = eigvals
-        return rank_two_field(output_strains)
+            #order = np.argsort(eigvals[0])[::-1] 
+            nzs = np.where(eigvals[0]!=0)[0]
+            zs = np.where(eigvals[0]==0)[0]
+            order= np.concatenate((nzs[np.argsort(eigvals[0][nzs])[::-1]],zs)) # Reorder to give max first
+            output_strains[:,::4,i] = eigvals[0][order]
+            eigvecs = eigvecs[:,order,:]
+            vec1[:,:,i] = eigvecs[:,0,:]
+            vec2[:,:,i] = eigvecs[:,1,:]
+            vec3[:,:,i] = eigvecs[:,2,:]
+                
+        return rank_two_field(output_strains), vector_field(vec1),vector_field(vec2),vector_field(vec3)
     
     def get_deviatoric(self)->Self:
         """Return the deviatoric components of the tensor
