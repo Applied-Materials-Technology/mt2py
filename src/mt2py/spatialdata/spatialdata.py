@@ -179,7 +179,7 @@ class SpatialData():
             deg (float): degrees to rotate the YZ plane
         """
         ang = np.deg2rad(deg)
-        rot_mat = np.array([[0,1,0],
+        rot_mat = np.array([[1,0,0],
                             [0,np.cos(ang),-np.sin(ang)],
                             [0,np.sin(ang),np.cos(ang)]])
         self.rotate_data(rot_mat)    
