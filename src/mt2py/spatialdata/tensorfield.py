@@ -216,6 +216,7 @@ class rank_two_field(tensor_field_base):
         output_strains = np.zeros((self.n_points,9,self.n_steps))
         for i in range(self.n_steps):
             eigvals,eigvecs = np.linalg.eig(np.reshape(self.data[:,:,i],(-1,3,3)))
+            eigvals = np.sort(eigvals[0])[::-1] # Reorder to give max first
             output_strains[:,::4,i] = eigvals
         return rank_two_field(output_strains)
     
