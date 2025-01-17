@@ -158,6 +158,32 @@ class SpatialData():
                             [0,0,1]])
         self.rotate_data(rot_mat)
 
+    def rotxz(self,deg:float)-> None:
+        """Rotate the XZ plane deg degrees (i.e. around the Y axis)
+        Should be good for max shear from principals
+
+        Args:
+            deg (float): degrees to rotate the xz plane
+        """
+        ang = np.deg2rad(deg)
+        rot_mat = np.array([[np.cos(ang),0,np.sin(ang)],
+                            [0,1,0],
+                            [-np.sin(ang),0,np.cos(ang)]])
+        self.rotate_data(rot_mat)
+
+    def rotyz(self,deg:float)-> None:
+        """Rotate the YZ plane deg degrees (i.e. around the X axis)
+        Should be good for max shear from principals
+
+        Args:
+            deg (float): degrees to rotate the YZ plane
+        """
+        ang = np.deg2rad(deg)
+        rot_mat = np.array([[0,1,0],
+                            [0,np.cos(ang),-np.sin(ang)],
+                            [0,np.sin(ang),np.cos(ang)]])
+        self.rotate_data(rot_mat)    
+
     def rotate_fields(self) -> None:
         """Rotates the underlying vector/tensor fields.
         Must be used after align.
