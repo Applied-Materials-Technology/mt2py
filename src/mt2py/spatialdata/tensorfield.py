@@ -161,7 +161,7 @@ class rank_two_field(tensor_field_base):
         T32_r = r31*r21*T11 + r31*r22*T12 + r31*r23*T13 + r32*r21*T21 + r32*r22*T22 + r32*r23*T23 + r33*r21*T31+ r33*r22*T32+ r33*r23*T33
         T33_r = r31*r31*T11 + r31*r32*T12 + r31*r33*T13 + r32*r31*T21 + r32*r32*T22 + r32*r33*T23 + r33*r31*T31+ r33*r32*T32+ r33*r33*T33
 
-        rotated_tensor = np.squeeze(np.stack((T11_r,T12_r,T13_r,T21_r,T22_r,T23_r,T31_r,T32_r,T33_r),axis=1))
+        rotated_tensor = np.squeeze(np.stack((T11_r,T12_r,T13_r,T21_r,T22_r,T23_r,T31_r,T32_r,T33_r),axis=1),axis=2)
         self.data = rotated_tensor
     
     def get_component_field(self, component: Sequence , time_step: int) -> npt.NDArray:
