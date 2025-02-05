@@ -53,7 +53,7 @@ def read_load_file(filename):
                      
     return index, time, load   
 
-def read_matchid_csv(filename):
+def read_matchid_csv(filename,load_col_pos=2):
     """Read the Image.csv file produced by the matchID grabber.
 
     Args:
@@ -68,13 +68,14 @@ def read_matchid_csv(filename):
     time = data['TimeStamp'].to_numpy()
     time = time-time[0] # rebase so image 0 is at t =0
 
-    if ' Force [N]' in data.columns:
-        load = data[' Force [N]'].to_numpy()
-    elif ' Force_Logic [N]' in data.columns:
-        load = data[' Force_Logic [N]'].to_numpy()
-    else:
-        load = np.zeros(len(time))
-    
+    #if ' Force [N]' in data.columns:
+    #    load = data[' Force [N]'].to_numpy()
+    #elif ' Force_Logic [N]' in data.columns:
+    #    load = data[' Force_Logic [N]'].to_numpy()
+    #else:
+    #    load = np.zeros(len(time))
+    load = data[data.columns[load_col_pos]]
+
     index = np.arange(len(time))
     return index, time, load
 
