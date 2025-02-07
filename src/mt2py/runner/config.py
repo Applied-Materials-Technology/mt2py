@@ -18,7 +18,7 @@ class CommandLineConfig:
             raise FileNotFoundError('File not found at path.')
 
     def return_call_args(self,parameter_group:Group,output_dir:Path)->list:
-        """Return a list of arguments that can be parsed to the 
+        """Return a list of arguments that can be passed to the 
         parallel runner
 
         Args:
@@ -32,7 +32,9 @@ class CommandLineConfig:
         if self.input_tag is not None:
             arg_list.append(self.input_tag)
         arg_list.append(str(self.input_file))
-        for parameter in parameter_group.opt_parameters:
+        # Changing to do all parameters allowing for new default to be specified 
+        # without modifying input file
+        for parameter in parameter_group.all_parameters:
             # Check its for the right program
             if parameter.source == self.source:
                 arg_list.append(parameter.name+'='+str(parameter.value))

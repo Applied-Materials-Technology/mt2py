@@ -55,6 +55,7 @@ class Caller():
         #arg_list.append('--redirect-stdout')
         
         result = subprocess.run(arg_list,capture_output=True,shell=False)
+        #print(result)
         #if '*** ERROR ***' in result:
         filename = self.moose_clc.source + '-' + str(parameter_group.id)
         output_path = self.output_dir / filename
