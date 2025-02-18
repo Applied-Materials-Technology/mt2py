@@ -328,7 +328,7 @@ def read_matchid_csv(filename):
     index = np.arange(len(time))
     return index, time, load
 
-def average_matchid_csv(filename: Path,group_size: int)->None:
+def average_matchid_csv(filename: Path,group_size: int,col=3)->None:
     """Read in a matchID Image.csv file and average it over
     group size
 
@@ -341,10 +341,9 @@ def average_matchid_csv(filename: Path,group_size: int)->None:
     time = data['TimeStamp'].to_numpy()
     file = data['File'].to_numpy()
     
-    try:
-        load = data[' Force [N]'].to_numpy()
-    except:
-        load = data[' Force_Logic [N]'].to_numpy()
+
+    load = data[data.columns[col]].to_numpy()
+
     
     new_file = filename.parent / 'Image_Avg_{}.csv'.format(group_size)
     time_avg = np.mean(np.reshape(time,(-1,group_size)),axis=1)
