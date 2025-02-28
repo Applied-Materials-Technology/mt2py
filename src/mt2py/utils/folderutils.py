@@ -48,7 +48,7 @@ def generate_directory(dir_path: Path):
     if not dir_path.exists():
         os.makedirs(dir_path)
 
-def generate_folder_structure(setup_dict:dict):
+def generate_folder_structure_amt(setup_dict:dict):
     """Make the folder structure
 
     Args:
@@ -60,6 +60,22 @@ def generate_folder_structure(setup_dict:dict):
     paths = generate_path_list(structure)
     main_name =setup_dict['rig_name']+setup_dict['test_type']+'-'+setup_dict['test_number']
     main_path = setup_dict['main_directory']/main_name
+
+    for path in paths:
+        generate_directory(main_path / path)
+
+def generate_folder_structure_generic(main_path:Path,structure_file:Path):
+    """Generic version of the folder creator.
+
+    Args:
+        main_path (Path): _Where the folders are to be made.
+        structure_file (Path): .yaml file describing the structure. 
+    """
+
+    with open(structure_file, mode="rt", encoding="utf-8") as file:
+        structure= yaml.safe_load(file)
+
+    paths = generate_path_list(structure)
 
     for path in paths:
         generate_directory(main_path / path)

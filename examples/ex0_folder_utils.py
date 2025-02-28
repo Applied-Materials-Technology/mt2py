@@ -1,4 +1,5 @@
-from mt2py.utils.folderutils import generate_folder_structure
+from mt2py.utils.folderutils import generate_folder_structure_amt
+from mt2py.utils.folderutils import generate_folder_structure_generic
 from pathlib import Path
 
 # The folder utils can be used to make directories 
@@ -14,5 +15,10 @@ setup_dict = {
     'structure':Path('/home/rspencer/projects/mt2py/scripts/ex0_structure.yaml')
 }
 
-generate_folder_structure(setup_dict)
+# A version using the AMT data recommendations is here
+generate_folder_structure_amt(setup_dict)
+
+# Or alternatively a generic version that takes a path and the structure only.
+generate_folder_structure_generic(setup_dict['main_directory'],setup_dict['structure'])
+
 
