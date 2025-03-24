@@ -92,7 +92,7 @@ class SpatialData():
             key (str): New key for the metadata dictionary
             value (any): Value for the metadata dictionary
         """
-        self._metadata[key] = value
+        self.metadata[key] = value
     
     def add_metadata_bulk(self,metadata_dict: dict):
         """Adding individual metadata item.
@@ -100,7 +100,7 @@ class SpatialData():
         Args:
             metadata_dict (dict): New dictionary with additional metadata
         """
-        self._metadata.update(metadata_dict)
+        self.metadata.update(metadata_dict)
 
     def align(self,target: Self,scale_factor: int) -> None:
         """Uses pyvista built in methods to align with target.

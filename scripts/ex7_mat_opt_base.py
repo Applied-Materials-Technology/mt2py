@@ -45,6 +45,10 @@ exodus_reader = ExodusReader(Path(config['external_data']))
 sim_data = exodus_reader.read_all_sim_data()
 model_data= simdata_to_spatialdata(sim_data)
 
+if 'sync_indices' in config:
+    model_data.add_metadata_item('sync_indices',config['sync_indices'])
+    sync_times = model_data.time[config['sync_indices']].tolist()
+
 # Setup Material Model Optimisation
 parent = Path(config['parent'])
 moose_cl = CommandLineConfig(config['moose_config']['name'],
@@ -64,13 +68,13 @@ for p in config['parameters']:
 
 g = Group(parameters)
 
-caller = Caller(parent,moose_cl)
+caller = Caller(parent,moose_cl,sync_times = sync_times)
 caller.n_threads = config['n_threads']
 
 #Check config transferred correctly
 print(parent)
 print(g)
-
+#print(caller.)
 
 # Set termination criteria for optimisation
 termination = DefaultSingleObjectiveTermination(
@@ -90,10 +94,18 @@ def displacement_match(data,endtime,external_data):
     # and experiment match up. 
     # This function can be as complex as required.
 
-    # Get the known model displacements
-    input_disp_y = external_data.data_fields['displacement'].data[:,1,-1]
-    # Get the candidate model displacements
-    disp_y = data.data_fields['displacement'].data[:,1,-1]
+    #
+    # Check for sync_times
+    if 'sync_indices' in external_data.metadata:
+        sync_indices = external_data.metadata['sync_indices']
+        input_disp_y = external_data.data_fields['displacement'].data[:,1,sync_indices]
+        # Get the candidate model displacements
+        disp_y = data.data_fields['displacement'].data[:,1,:]
+    else:
+        # Get the known model displacements
+        input_disp_y = external_data.data_fields['displacement'].data[:,1,-1]
+        # Get the candidate model displacements
+        disp_y = data.data_fields['displacement'].data[:,1,-1]
     
     # Calculate and return the euclidean distance between each 
     # point in the known and candidate models.

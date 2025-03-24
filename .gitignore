@@ -143,5 +143,6 @@ dmypy.json
 
 #Example outputs
 examples/outputs
+examples/data
 
 sloth-opt

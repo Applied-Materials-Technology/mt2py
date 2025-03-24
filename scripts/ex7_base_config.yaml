@@ -1,11 +1,11 @@
 parent: examples/outputs
-external_data: examples/outputs/moose-0.e
+external_data: examples/data/moose-0.e
 moose_config: 
   name: moose
   command: sloth-opt
-  input_file: scripts/ex1_linear_elastic.i
+  input_file: scripts/ex7_linear_elastic.i
   input_tag: -i
-  output_name: Outputs/file_base
+  output_name: Outputs/out/file_base
 gmsh_config:
   name: gmsh
   command: python
@@ -24,3 +24,4 @@ n_threads: 4
 pop_size: 4
 n_generations: 30
 run_name: Ex6
+sync_indices: [1,3,5]

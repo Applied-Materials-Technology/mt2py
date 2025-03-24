@@ -11,18 +11,20 @@ import os
 
 class Caller():
 
-    def __init__(self,ouput_dir: Path, moose_clc:CommandLineConfig,gmsh_clc = None,):
+    def __init__(self,ouput_dir: Path, moose_clc:CommandLineConfig,gmsh_clc = None,sync_times = None):
         """Class to call moose and gmsh 
 
         Args:
             moose_clc (CommandLineConfig): Config for moose
             output_config (OutputConfig): Output config
             gmsh_clc (_type_, optional): Config for Gmsh. Defaults to None.
+            sync_times (list): Times at which the simulation is to be output
         """
         self.output_dir = ouput_dir
         self.moose_clc = moose_clc
         self.gmsh_clc = gmsh_clc
         self.n_threads = 4
+        self.sync_times = sync_times
     
     def call_single_util(self,clc:CommandLineConfig,parameter_group: Group):
 
@@ -47,12 +49,16 @@ class Caller():
         
         arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
         
+        if self.sync_times is not None:
+            arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.sync_times))
+
         if self.gmsh_clc is not None:
             filename = self.gmsh_clc.source + '-' + str(parameter_group.id)
             output_path = self.output_dir / filename
             arg_list.append('Mesh/file={}.msh'.format(str(output_path)))
         
         #arg_list.append('--redirect-stdout')
+        #print(arg_list)
         
         result = subprocess.run(arg_list,capture_output=True,shell=False)
         #print(result)
