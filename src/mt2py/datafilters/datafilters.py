@@ -346,7 +346,7 @@ class FastFilter(DataFilterBase):
         if self._mesh_data is None: 
             grid_mesh,u_int,v_int = FastFilter.interpolate_to_grid(data,self._grid_spacing,self._exclude_limit)
         else:
-            grid_mesh,u_int,v_int = FastFilter.interpolate_to_mesh_pv(data,self._mesh_data,self._exclude_limit)
+            grid_mesh,u_int,v_int = FastFilter.interpolate_to_mesh_pv(data,self._mesh_data)
 
         # Perform the windowed strain calculation
         # Only Q4 for now
