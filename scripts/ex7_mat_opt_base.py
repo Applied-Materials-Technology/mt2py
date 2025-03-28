@@ -49,6 +49,8 @@ if 'sync_indices' in config:
     model_data.add_metadata_item('sync_indices',config['sync_indices'])
     sync_times = model_data.time[config['sync_indices']].tolist()
 
+moose_timing = {'sync_times':sync_times,}
+
 # Setup Material Model Optimisation
 parent = Path(config['parent'])
 moose_cl = CommandLineConfig(config['moose_config']['name'],
@@ -68,7 +70,7 @@ for p in config['parameters']:
 
 g = Group(parameters)
 
-caller = Caller(parent,moose_cl,sync_times = sync_times)
+caller = Caller(parent,moose_cl,moose_timing= moose_timing)
 caller.n_threads = config['n_threads']
 
 #Check config transferred correctly

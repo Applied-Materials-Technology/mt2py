@@ -20,9 +20,9 @@ import pyvista as pv
 
 from mt2py.reader.exodus import ExodusReader
 
-#from pyvale.imagesim.imagedefopts import ImageDefOpts
-#from pyvale.imagesim.cameradata import CameraData
-#import pyvale.imagesim.imagedef as sid
+from pyvale.imagesim.imagedefopts import ImageDefOpts
+from pyvale.imagesim.cameradata import CameraData
+import pyvale.imagesim.imagedef as sid
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 import subprocess
@@ -213,6 +213,33 @@ class FastFilter(DataFilterBase):
         return dic_data_mesh, u_int, v_int
     
     @staticmethod
+    def interpolate_to_mesh_pv(fe_data : SpatialData, dic_data_mesh: pv.UnstructuredGrid):
+        """Interpolate the mesh using the inbuilt pyvista capability
+
+        Args:
+            fe_data (SpatialData): _description_
+            dic_data_mesh (pv.UnstructuredGrid): _description_
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            _type_: _description_
+        """
+        u_int = np.empty((dic_data_mesh.n_points,fe_data.n_steps))
+        v_int = np.empty((dic_data_mesh.n_points,fe_data.n_steps))
+
+        for i in range(fe_data.n_steps):
+            fe_data.mesh_data['disp']=fe_data.data_fields['displacement'].data[:,:,i]
+            interp_model = dic_data_mesh.interpolate(fe_data.mesh_data)
+            u_int[:,i] = interp_model['disp'][:,0]
+            v_int[:,i] = interp_model['disp'][:,1]
+
+        
+        return dic_data_mesh, u_int, v_int
+
+    
+    @staticmethod
     def L_Q4(x:NDArray)->NDArray:
         """Reorganise x Data to perform least-squares
 
@@ -225,7 +252,7 @@ class FastFilter(DataFilterBase):
         return np.vstack((np.ones(x[0].shape),x[0],x[1],x[0]*x[1])).T
 
     @staticmethod
-    def evaluate_point_dev(point_data,data,window_size):
+    def evaluate_point_dev(point_data,data,point_centre):
         """
         Fit an calculate deformation gradient at each point.
         """
@@ -246,7 +273,8 @@ class FastFilter(DataFilterBase):
         else:
             paramsQ4, r, rank, s = np.linalg.lstsq(xbasis, ydata)
 
-            px = xdata[:,int(round((len(ydata)) /2))]
+            #px = xdata[:,int(round((len(ydata)) /2))]
+            px=point_centre[:2]
             partial_dx = paramsQ4[1] + paramsQ4[3]*px[1]
             partial_dy = paramsQ4[2] + paramsQ4[3]*px[0]
             
@@ -276,13 +304,14 @@ class FastFilter(DataFilterBase):
         y= grid_mesh.points[:,1]
         x_spacing = np.max(np.diff(np.unique(x)))
         y_spacing = np.max(np.diff(np.unique(y)))
-        delta = x_spacing/50
+        delta = x_spacing/5
 
         for i in range(len(ind_data)):
-            a = x>x[i]-(levels*(delta+x_spacing))
-            b = x<x[i]+(levels*(delta+x_spacing))
-            c = y>y[i]-(levels*(delta+y_spacing))
-            d = y<y[i]+(levels*(delta+y_spacing))
+            gap = ((levels*x_spacing)+delta)
+            a = x>x[i]- gap
+            b = x<x[i]+ gap
+            c = y>y[i]- gap
+            d = y<y[i]+ gap
             ind_list.append(ind_data[a*b*c*d])
 
         dudx = np.empty((grid_mesh.n_points,v_int.shape[-1]))
@@ -295,11 +324,11 @@ class FastFilter(DataFilterBase):
         for point in range(grid_mesh.n_points):
 
             neighbours = ind_list[point]
-            point_data = grid_mesh.points[neighbours]
-            u = u_r[neighbours,:]
-            v = v_r[neighbours,:]
-            dudx[point,:],dudy[point,:] = FastFilter.evaluate_point_dev(point_data,u,window_size)
-            dvdx[point,:],dvdy[point,:] = FastFilter.evaluate_point_dev(point_data,v,window_size)
+            point_data = grid_mesh.points[neighbours][:,:2]
+            u = u_int[neighbours,:]
+            v = v_int[neighbours,:]
+            dudx[point,:],dudy[point,:] = FastFilter.evaluate_point_dev(point_data,u,grid_mesh.points[point])
+            dvdx[point,:],dvdy[point,:] = FastFilter.evaluate_point_dev(point_data,v,grid_mesh.points[point])
 
         return dudx,dudy,dvdx,dvdy
     
@@ -317,7 +346,7 @@ class FastFilter(DataFilterBase):
         if self._mesh_data is None: 
             grid_mesh,u_int,v_int = FastFilter.interpolate_to_grid(data,self._grid_spacing,self._exclude_limit)
         else:
-            grid_mesh,u_int,v_int = FastFilter.interpolate_to_mesh(data,self._mesh_data,self._exclude_limit)
+            grid_mesh,u_int,v_int = FastFilter.interpolate_to_mesh_pv(data,self._mesh_data,self._exclude_limit)
 
         # Perform the windowed strain calculation
         # Only Q4 for now

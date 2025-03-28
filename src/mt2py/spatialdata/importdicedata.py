@@ -3,11 +3,11 @@ import pyvista as pv
 from mt2py.spatialdata.spatialdata import SpatialData
 from mt2py.spatialdata.tensorfield import vector_field
 from mt2py.spatialdata.tensorfield import rank_two_field
-from mt2py.reader.simdata import simdata
+from mt2py.reader.simdata import SimData
 from typing import Sequence
 
 
-def simdata_dice_to_spatialdata(simdata : simdata,image_scale: float,centre_location: Sequence[float],fedata = None)->SpatialData:
+def simdata_dice_to_spatialdata(simdata : SimData,image_scale: float,centre_location: Sequence[float],fedata = None)->SpatialData:
     """Reads simdata from mooseherder exodus reader
      and converts to SpatialData format
 

@@ -21,11 +21,13 @@ def return_mesh_simdata(simdata ,dim3: bool) -> pv.UnstructuredGrid:
         surface_nodes = simdata.side_sets[('Visible-Surface','node')]
 
         quad_to_lin = {27:9, #HEX27 to QUAD9
+                       20:8, #HEX20 to QUAD8
                        8:4,  #HEX8 to QUAD4
                        18:6 #PRISM18 to TRI6
                        }
         lin_celltypes = {4:9, #QUAD4 Cell type index
                         9:28,  #QUAD9 Cell type index
+                        8:23,  #QUAD8 cell type index
                         6:22,  #TRI6
                         3:5    #TRI3
                         }

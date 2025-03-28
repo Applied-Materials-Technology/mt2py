@@ -11,7 +11,7 @@ import os
 
 class Caller():
 
-    def __init__(self,ouput_dir: Path, moose_clc:CommandLineConfig,gmsh_clc = None,sync_times = None):
+    def __init__(self,ouput_dir: Path, moose_clc:CommandLineConfig,gmsh_clc = None,moose_timing = None):
         """Class to call moose and gmsh 
 
         Args:
@@ -24,7 +24,7 @@ class Caller():
         self.moose_clc = moose_clc
         self.gmsh_clc = gmsh_clc
         self.n_threads = 4
-        self.sync_times = sync_times
+        self.moose_timing = moose_timing
     
     def call_single_util(self,clc:CommandLineConfig,parameter_group: Group):
 
@@ -49,8 +49,14 @@ class Caller():
         
         arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
         
-        if self.sync_times is not None:
-            arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.sync_times))
+        if 'sync_times' in self.moose_timing:
+            arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.moose_timing['sync_times']))
+
+        if 'end_time' in self.moose_timing:
+            arg_list.append('Executioner/end_time='+ str(self.moose_timing['end_time']))
+
+        if 'time_file' in self.moose_timing:
+            arg_list.append(self.moose_timing['time_name']+'='+ str(self.moose_timing['time_file']))
 
         if self.gmsh_clc is not None:
             filename = self.gmsh_clc.source + '-' + str(parameter_group.id)

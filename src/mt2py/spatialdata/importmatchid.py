@@ -53,7 +53,7 @@ def read_load_file(filename):
                      
     return index, time, load   
 
-def read_matchid_csv(filename,load_col_pos=2):
+def read_matchid_csv(filename,load_col_pos=3):
     """Read the Image.csv file produced by the matchID grabber.
 
     Args:

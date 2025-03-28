@@ -257,6 +257,34 @@ class SpatialData():
         mb_interpolated = SpatialData(data_sets_int,self._index,self._time,self._load,metadata)
         return mb_interpolated
     
+    def interpolate_to_mesh(self,target_mesh:pv.UnstructuredGrid):
+        """Interpolate spatial data to a regular grid with given spacing.
+        Used as part of the DIC simulation.
+        Primarily designed for MOOSE outputs.
+
+        Args:
+            spacing (float, optional): Grid spacing in mm. Defaults to 0.2.
+
+        Returns:
+            SpatialData: A new SpatialData instance with the interpolated data.
+        """
+
+        # Possibly want to add tag to metadata to say it's processed.
+        metadata = self._metadata
+        metadata['interpolated'] = True
+        metadata['interpolation_type'] = 'mesh'
+        
+        data_sets_int = []
+        for mesh in self.data_sets:
+            result = grid.sample(mesh)
+            for field in result.array_names:
+                if field not in ['ObjectId','vtkGhostType','vtkValidPointMask','vtkGhostType']:
+                    result[field][result['vtkValidPointMask']==False] =np.nan
+            data_sets_int.append(result)
+
+        mb_interpolated = SpatialData(data_sets_int,self._index,self._time,self._load,metadata)
+        return mb_interpolated
+    
     def window_differentation(self,window_size=5):
         """Differentiate spatialdata using subwindow approach to 
         mimic DIC filter. Adds the differentiated fields into the meshes in
