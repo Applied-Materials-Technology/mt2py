@@ -341,6 +341,10 @@ class FastFilter(DataFilterBase):
         Returns:
             SpatialData: Data with filter applied
         """
+
+        if data is None:
+            #Model didn't run
+            return None
        
         # Interpolate the data to the new grid      
         if self._mesh_data is None: 
