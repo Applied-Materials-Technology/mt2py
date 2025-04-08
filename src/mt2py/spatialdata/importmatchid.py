@@ -66,7 +66,7 @@ def read_matchid_csv(filename,load_col_pos=3):
     """
     data = pd.read_csv(filename,delimiter=';')
     time = data['TimeStamp'].to_numpy()
-    time = time-time[0] # rebase so image 0 is at t =0
+    #time = time-time[0] # rebase so image 0 is at t =0
 
     #if ' Force [N]' in data.columns:
     #    load = data[' Force [N]'].to_numpy()
@@ -74,7 +74,7 @@ def read_matchid_csv(filename,load_col_pos=3):
     #    load = data[' Force_Logic [N]'].to_numpy()
     #else:
     #    load = np.zeros(len(time))
-    load = data[data.columns[load_col_pos]]
+    load = data[data.columns[load_col_pos]].to_numpy()
 
     index = np.arange(len(time))
     return index, time, load
