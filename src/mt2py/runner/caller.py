@@ -102,10 +102,13 @@ class Caller():
         Returns:
             SpatialData: spatial data instance for the exdous data. 
         """
-
-        exodus_reader = ExodusReader(output_file)
-        sim_data = exodus_reader.read_all_sim_data()
-        out_data= simdata_to_spatialdata(sim_data)
+        
+        try:
+            exodus_reader = ExodusReader(output_file)
+            sim_data = exodus_reader.read_all_sim_data()
+            out_data= simdata_to_spatialdata(sim_data)
+        except FileNotFoundError:
+            out_data = None
 
         return out_data
     
