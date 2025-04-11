@@ -12,6 +12,7 @@ from mt2py.spatialdata.importsimdata import simdata_to_spatialdata
 from mt2py.spatialdata.importdicedata import simdata_dice_to_spatialdata
 from mt2py.spatialdata.tensorfield import rank_two_field
 from mt2py.spatialdata.tensorfield import vector_field
+from mt2py.spatialdata.tensorfield import scalar_field
 
 from scipy.spatial import cKDTree as KDTree
 from scipy.spatial import Delaunay
