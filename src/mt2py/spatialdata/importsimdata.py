@@ -3,6 +3,7 @@ import pyvista as pv
 from mt2py.spatialdata.spatialdata import SpatialData
 from mt2py.spatialdata.tensorfield import vector_field
 from mt2py.spatialdata.tensorfield import rank_two_field
+from mt2py.spatialdata.tensorfield import scalar_field
 
 
 def return_mesh_simdata(simdata ,dim3: bool) -> pv.UnstructuredGrid:
@@ -166,13 +167,17 @@ def simdata_to_spatialdata(simdata)->SpatialData:
 
     stresses = []
     strains = []
+    others = []
     for key in simdata.node_vars.keys():
         if 'stress_' in key:
             stresses.append(key[:-3])
         if 'strain_' in key:
             strains.append(key[:-3])
+        if 'damage_' in key:
+            others.append(key)
     stress_fields = np.unique(np.array(stresses))
     strain_fields = np.unique(np.array(strains))
+    other_fields = np.unique(np.array(others))
     all_fields = np.concatenate((stress_fields,strain_fields))
     
     #Iterate over fields and add into the data_fields dict
@@ -185,6 +190,9 @@ def simdata_to_spatialdata(simdata)->SpatialData:
             else:
                 stack.append(dummy)
         data_fields[a_field] = rank_two_field(np.stack(stack,axis=1))
+    
+    for o_field in other_fields:
+        data_fields[o_field] = scalar_field(np.expand_dims(data_dict[o_field],1))
 
     
     mb = SpatialData(initial_mesh,data_fields,metadata,index,time,load)

@@ -235,8 +235,46 @@ class FastFilter(DataFilterBase):
             u_int[:,i] = interp_model['disp'][:,0]
             v_int[:,i] = interp_model['disp'][:,1]
 
-        
         return dic_data_mesh, u_int, v_int
+    
+    @staticmethod
+    def interpolate_to_mesh_generic(fe_data : SpatialData, dic_data_mesh: pv.UnstructuredGrid,fields:list)->SpatialData:
+        """Interpolate the mesh using the inbuilt pyvista capability
+
+        Args:
+            fe_data (SpatialData): _description_
+            dic_data_mesh (pv.UnstructuredGrid): _description_
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            _type_: _description_
+        """
+        data_arrays = []
+        for field in fields:
+            data_arrays.append(np.empty((dic_data_mesh.n_points,fe_data.data_fields[field].data.shape[1],fe_data.n_steps)))
+
+        for i in range(fe_data.n_steps):
+            for j,field in enumerate(fields):
+                fe_data.mesh_data[field]=fe_data.data_fields[field].data[:,:,i]
+                interp_model = dic_data_mesh.interpolate(fe_data.mesh_data)
+                data_arrays[j][:,:,i] = interp_model[field]
+        
+        data_fields = {}
+        for j, field in enumerate(fields):
+            if isinstance(fe_data.data_fields[field],rank_two_field):
+                data_fields[field] = rank_two_field(data_arrays[j])
+            if isinstance(fe_data.data_fields[field],vector_field):
+                data_fields[field] = vector_field(data_arrays[j])
+            if isinstance(fe_data.data_fields[field],scalar_field):
+                data_fields[field] = scalar_field(data_arrays[j])
+
+        new_metadata = fe_data.metadata
+
+        mb = SpatialData(dic_data_mesh,data_fields,new_metadata,fe_data.index,fe_data.time,fe_data.load)
+
+        return mb
 
     
     @staticmethod
