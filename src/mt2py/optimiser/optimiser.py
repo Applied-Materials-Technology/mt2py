@@ -199,10 +199,12 @@ class MooseOptimisationRun():
         print('                 Sweep Complete                 ')
         print('************************************************')
         print('')
-        for i in range(x.shape[0]):
-            print('{}, {}'.format(x[i],F[0,i]))
+        #for i in range(x.shape[0]):
+        #    print('{}, {}'.format(x[i],F[0,i]))
+        print(x)
+        print(F)
         #self.print_status_to_file()
-        #self.backup()
+        self.backup()
         #print(self.status_string())
         #self.print_status_to_file()
 
