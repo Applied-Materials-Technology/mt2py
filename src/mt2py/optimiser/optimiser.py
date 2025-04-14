@@ -167,7 +167,7 @@ class MooseOptimisationRun():
             p_group.id = i
             p_group.update(x[i,:])
             param_groups.append(p_group)
-        print(param_groups)
+        #print(param_groups)
         # Run
         t0 = time.time()
         output_files = self._caller.call_parallel(param_groups)
