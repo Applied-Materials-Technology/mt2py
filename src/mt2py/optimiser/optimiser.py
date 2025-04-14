@@ -135,7 +135,76 @@ class MooseOptimisationRun():
         print(self.status_string())
         self.print_status_to_file()
 
-    
+    def run_sweep(self,n_samp:int):
+        """Run a sweep over ONE parameter for now. Using the bounds
+        and n_samp to test a linear spread of values between the bounds
+
+        Args:
+            n_samp (int): Number of intermediate values to run.
+        """
+        print('************************************************')
+        print('             <<   Run Start   >>                ')
+        print('------------------------------------------------')
+        print('              All Input Parameters              ')
+
+        print(self._parameter_group)        
+
+        #Clear directory
+        self._caller.clear_output_dir()
+
+        if len(self._parameter_group.opt_parameters)>1:
+            raise ValueError('Only one parameter can be swept.')
+
+        # Ask for the next solution to be implemented
+        #Get parameters
+        for p in self._parameter_group.opt_parameters:
+            x=np.linspace(p.bounds[0],p.bounds[1],n_samp)
+        x = np.expand_dims(x,1)
+        # Assign the parameters
+        param_groups = []
+        for i in range(x.shape[0]):
+            p_group = copy.deepcopy(self._parameter_group)
+            p_group.id = i
+            p_group.update(x[i,:])
+            param_groups.append(p_group)
+        print(param_groups)
+        # Run
+        t0 = time.time()
+        output_files = self._caller.call_parallel(param_groups)
+        t1 = time.time()
+        print('        Run time = {:.2f} seconds.'.format(t1-t0))
+        print('------------------------------------------------')
+        # Read in moose results and get cost. 
+        print('                Reading Data                    ')
+        print('------------------------------------------------')
+        
+        #output_files = self.sweep_reader.read_all_output_keys()
+        spatial_data_list = self._caller.read_parallel(output_files)
+
+        # Run Data filter, if there is one.
+        if self._data_filter is not None:
+            print('             Running Data Filter                ')
+            print('------------------------------------------------')
+            spatial_data_list = self._data_filter.run_filter(spatial_data_list)
+        print('            Calculating Objectives              ')
+        print('------------------------------------------------')
+
+        # Assuming costs will be something like final time or something
+        costs = np.array(self._cost_function.evaluate_parallel(spatial_data_list))
+        
+        F = []
+        for i in range(costs.shape[1]):
+            F.append(costs[:,i])
+
+        print('                 Sweep Complete                 ')
+        print('************************************************')
+        print('')
+        for i in range(x.shape[0]):
+            print('{}, {}'.format(x[i],F[0,i]))
+        #self.print_status_to_file()
+        #self.backup()
+        #print(self.status_string())
+        #self.print_status_to_file()
 
     def status_string(self):
         """Generates a string the current status of the optimization. 

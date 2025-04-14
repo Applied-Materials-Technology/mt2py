@@ -49,14 +49,15 @@ class Caller():
         
         arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
         
-        if 'sync_times' in self.moose_timing:
-            arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.moose_timing['sync_times']))
+        if self.moose_timing is not None:
+            if 'sync_times' in self.moose_timing:
+                arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.moose_timing['sync_times']))
 
-        if 'end_time' in self.moose_timing:
-            arg_list.append('Executioner/end_time='+ str(self.moose_timing['end_time']))
+            if 'end_time' in self.moose_timing:
+                arg_list.append('Executioner/end_time='+ str(self.moose_timing['end_time']))
 
-        if 'time_file' in self.moose_timing:
-            arg_list.append(self.moose_timing['time_name']+'='+ str(self.moose_timing['time_file']))
+            if 'time_file' in self.moose_timing:
+                arg_list.append(self.moose_timing['time_name']+'='+ str(self.moose_timing['time_file']))
 
         if self.gmsh_clc is not None:
             filename = self.gmsh_clc.source + '-' + str(parameter_group.id)
