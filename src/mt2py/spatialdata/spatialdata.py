@@ -478,7 +478,7 @@ class SpatialData():
         index_conversion = [0,4,8,5,2,1]
         new_data = self.data_fields[data_field].data.copy()[:,index_conversion,:]
         # Multiply shears by sqrt 2 (Mandel)
-        new_data[:,3:,:] = np.sqrt(2)*new_data[:,3:,:]
+        new_data[:,4:,:] = np.sqrt(2)*new_data[:,4:,:]
         return symmetric_rank_two_field(new_data)
 
     def plot(self,data_field='displacement',component=[1],time_step = -1,spacing=5 ,*args,**kwargs):
