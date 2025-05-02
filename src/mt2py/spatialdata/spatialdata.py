@@ -465,8 +465,8 @@ class SpatialData():
         except:
             print('Not all fields required. Run get_hydrostatic_stress and get_equivalent_stress')
  
-    @staticmethod
-    def to_mandel(data_field):
+    
+    def to_mandel(self,data_field):
         """Take a rank two tensor field and return a
         symmetric rank two tensor field in Mandel notation
         primarily for use with NEML2 / Pyzag 
@@ -476,7 +476,7 @@ class SpatialData():
         """
 
         index_conversion = [0,4,8,5,2,1]
-        new_data = data_field.data.copy()[index_conversion]
+        new_data = self.data_fields[data_field].data.copy()[:,index_conversion,:]
         # Multiply shears by sqrt 2 (Mandel)
         new_data[:,3:,:] = np.sqrt(2)*new_data[:,3:,:]
         return symmetric_rank_two_field(new_data)
