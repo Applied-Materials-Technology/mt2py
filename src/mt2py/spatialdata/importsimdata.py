@@ -116,7 +116,7 @@ def simdata_to_spatialdata(simdata)->SpatialData:
 
     initial_mesh = return_mesh_simdata(simdata,dim3)
     time = simdata.time
-    load = -simdata.glob_vars['react_y']
+    load = simdata.glob_vars['react_y']
     index = np.arange(len(time))
     
     data_dict = {}

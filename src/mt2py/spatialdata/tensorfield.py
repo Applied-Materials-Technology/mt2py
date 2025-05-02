@@ -306,3 +306,32 @@ class rank_two_field(tensor_field_base):
         """
         return np.sum(a*b,axis=1)
 
+class symmetric_rank_two_field(tensor_field_base):
+    """Holder for now. Mainly used to pass data to Pyzag
+    depending on notation the shear could be different. Which will
+    change the rotation behaviour. Consider moving things to torch?
+
+    Args:
+        tensor_field_base (_type_): _description_
+    """
+    
+    rank = 2
+
+    def __init__(self,input_data: npt.NDArray):
+        """Shape of input data should be  n x 6 x m
+        where n is points and m is timesteps
+
+        Args:
+            input_data (npt.NDArray): _description_
+        """
+
+        self.data = input_data
+        self.n_points = input_data.shape[0]
+        self.n_steps = input_data.shape[2]
+
+    def rotate(self,rotation_matrix: npt.NDArray) -> None:
+        pass
+
+    
+    def get_component_field(self,component: int,time_step: int)-> npt.NDArray:
+        return self.data[:,component,time_step]
