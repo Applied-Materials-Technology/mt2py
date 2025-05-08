@@ -167,7 +167,7 @@ class FastFilter(DataFilterBase):
         return result, u_int, v_int
         
     @staticmethod
-    def interpolate_to_grid_generic(fe_data : SpatialData,spacing : float, exclude_limit: float,field: str):
+    def interpolate_to_grid_generic(fe_data : SpatialData,spacing : float, exclude_limit: float):
         """Interpolate the FE data onto a regular grid with spacing.
 
         Args:
@@ -186,39 +186,30 @@ class FastFilter(DataFilterBase):
         x,y = np.meshgrid(xr,yr,indexing='ij')
         # Add Nans to the array for outline the edges of the specimen
         
-        if exclude_limit >0:
-            xp,yp = FastFilter.excluding_mesh(fe_data.mesh_data.points[:,0], fe_data.mesh_data.points[:,1], nx=exclude_limit, ny=exclude_limit)
-            zp = np.nan + np.zeros_like(xp)
-            points = np.transpose(np.vstack((np.r_[fe_data.mesh_data.points[:,0],xp], np.r_[fe_data.mesh_data.points[:,1],yp])))
-        
-            tri = Delaunay(points)
+
+        xp,yp = FastFilter.excluding_mesh(fe_data.mesh_data.points[:,0], fe_data.mesh_data.points[:,1], nx=exclude_limit, ny=exclude_limit)
+        zp = np.nan + np.zeros_like(xp)
+        points = np.transpose(np.vstack((np.r_[fe_data.mesh_data.points[:,0],xp], np.r_[fe_data.mesh_data.points[:,1],yp])))
+        tri = Delaunay(points)
+
+        data_dict = {}
+
+        for field in fe_data.data_fields:
             n_comp = fe_data.data_fields[field].data.shape[1]
             dat_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps,n_comp))
             for i in range(fe_data.n_steps):
                 for j in range(n_comp):
                     zd = fe_data.data_fields[field].data[:,j,i]
                     dat_int[:,:,i,j] = interpolate.LinearNDInterpolator(tri,np.r_[zd,zp])(x,y)
+            data_dict[field] = dat_int
         
-        else: # Don't use excluding mesh approach
-            points = np.transpose(np.vstack((np.r_[fe_data.mesh_data.points[:,0]], np.r_[fe_data.mesh_data.points[:,1]])))
-        
-            tri = Delaunay(points)
-            u_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
-            v_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
-            for i in range(fe_data.n_steps):
-                zu = fe_data.data_fields['displacement'].data[:,0,i]
-                zv = fe_data.data_fields['displacement'].data[:,1,i]
-                u_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zu])(x,y)
-                v_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zv])(x,y)
- 
-
         # Create pyvista mesh 
         x,y = np.meshgrid(xr,yr,indexing='ij')
 
         dat_int = np.reshape(dat_int,(x.shape[0],x.shape[1],fe_data.n_steps,n_comp))
         nan_mask = np.isnan(dat_int[...,0,0])
-        print(dat_int.shape)
-        print(nan_mask.shape)
+        #print(dat_int.shape)
+        #print(nan_mask.shape)
         # Create pyvista mesh 
         #x,y,z = np.meshgrid(xr,yr,zr)
         #print(nan_mask.shape)
@@ -226,7 +217,7 @@ class FastFilter(DataFilterBase):
         #nan_mask=np.reshape(nan_mask,x.shape)
         x[nan_mask] = np.nan
         y[nan_mask] = np.nan
-        return x,y,dat_int
+        return x,y,data_dict
     
     
     @staticmethod
