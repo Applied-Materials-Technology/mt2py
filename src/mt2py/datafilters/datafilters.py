@@ -139,11 +139,14 @@ class FastFilter(DataFilterBase):
             tri = Delaunay(points)
             u_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
             v_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
+            w_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
             for i in range(fe_data.n_steps):
                 zu = fe_data.data_fields['displacement'].data[:,0,i]
                 zv = fe_data.data_fields['displacement'].data[:,1,i]
+                zw = fe_data.data_fields['displacement'].data[:,2,i]
                 u_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zu,zp])(x,y)
                 v_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zv,zp])(x,y)
+                w_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zw,zp])(x,y)
         
         else: # Don't use excluding mesh approach
             points = np.transpose(np.vstack((np.r_[fe_data.mesh_data.points[:,0]], np.r_[fe_data.mesh_data.points[:,1]])))
@@ -151,11 +154,14 @@ class FastFilter(DataFilterBase):
             tri = Delaunay(points)
             u_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
             v_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
+            w_int = np.empty((x.shape[0],x.shape[1],fe_data.n_steps))
             for i in range(fe_data.n_steps):
                 zu = fe_data.data_fields['displacement'].data[:,0,i]
                 zv = fe_data.data_fields['displacement'].data[:,1,i]
+                zw = fe_data.data_fields['displacement'].data[:,2,i]
                 u_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zu])(x,y)
                 v_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zv])(x,y)
+                w_int[:,:,i] = interpolate.LinearNDInterpolator(tri,np.r_[zw])(x,y)
  
 
         # Create pyvista mesh 
@@ -164,7 +170,8 @@ class FastFilter(DataFilterBase):
         result = grid.sample(fe_data.mesh_data)
         u_int = np.reshape(u_int,(-1,fe_data.n_steps))
         v_int = np.reshape(v_int,(-1,fe_data.n_steps))
-        return result, u_int, v_int
+        w_int = np.reshape(w_int,(-1,fe_data.n_steps))
+        return result, u_int, v_int, w_int
         
     @staticmethod
     def interpolate_to_grid_generic(fe_data : SpatialData,spacing : float, exclude_limit: float):
@@ -284,14 +291,16 @@ class FastFilter(DataFilterBase):
         """
         u_int = np.empty((dic_data_mesh.n_points,fe_data.n_steps))
         v_int = np.empty((dic_data_mesh.n_points,fe_data.n_steps))
+        w_int = np.empty((dic_data_mesh.n_points,fe_data.n_steps))
 
         for i in range(fe_data.n_steps):
             fe_data.mesh_data['disp']=fe_data.data_fields['displacement'].data[:,:,i]
             interp_model = dic_data_mesh.interpolate(fe_data.mesh_data)
             u_int[:,i] = interp_model['disp'][:,0]
             v_int[:,i] = interp_model['disp'][:,1]
+            w_int[:,i] = interp_model['disp'][:,2]
 
-        return dic_data_mesh, u_int, v_int
+        return dic_data_mesh, u_int, v_int, w_int
     
     @staticmethod
     def interpolate_to_mesh_generic(fe_data : SpatialData, dic_data_mesh: pv.UnstructuredGrid,fields:list)->SpatialData:
@@ -428,6 +437,8 @@ class FastFilter(DataFilterBase):
 
         return dudx,dudy,dvdx,dvdy
     
+   
+    
     def run_filter_once(self,data : SpatialData)-> SpatialData:
         """Run the filter on one SpatialData instance
 
@@ -444,9 +455,9 @@ class FastFilter(DataFilterBase):
        
         # Interpolate the data to the new grid      
         if self._mesh_data is None: 
-            grid_mesh,u_int,v_int = FastFilter.interpolate_to_grid(data,self._grid_spacing,self._exclude_limit)
+            grid_mesh,u_int,v_int, w_int = FastFilter.interpolate_to_grid(data,self._grid_spacing,self._exclude_limit)
         else:
-            grid_mesh,u_int,v_int = FastFilter.interpolate_to_mesh_pv(data,self._mesh_data)
+            grid_mesh,u_int,v_int, w_int = FastFilter.interpolate_to_mesh_pv(data,self._mesh_data)
 
         # Perform the windowed strain calculation
         # Only Q4 for now
@@ -456,6 +467,7 @@ class FastFilter(DataFilterBase):
         time_steps = u_int.shape[-1]
         u_r = np.reshape(u_int,(-1,time_steps))
         v_r = np.reshape(v_int,(-1,time_steps))
+        w_r = np.reshape(w_int,(-1,time_steps))
 
         x = grid_mesh.points[:,0]
         y = grid_mesh.points[:,1]
@@ -467,9 +479,10 @@ class FastFilter(DataFilterBase):
 
         u_r_filt = u_r[filt]
         v_r_filt = v_r[filt]
+        w_r_filt = w_r[filt]
 
         dummy = np.zeros_like(u_r_filt)
-        displacement = np.stack((u_r_filt,v_r_filt,dummy),axis=1)
+        displacement = np.stack((u_r_filt,v_r_filt,w_r_filt),axis=1)
         data_fields = {'displacement'  :vector_field(displacement)} 
 
 

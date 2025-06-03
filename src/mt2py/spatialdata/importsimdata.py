@@ -143,7 +143,7 @@ def simdata_to_spatialdata(simdata)->SpatialData:
         overlap= initial_mesh.points[:,1]==initial_mesh_ref_y.points[:,1]
 
         for field in data_dict:
-            if field == 'disp_y' or  '_xy' in field or '_yz' in field:
+            if field == 'disp_y' or  '_xy' in field or '_yz' in field or  '_yx' in field or  '_zy' in field:
                 
                 data_dict[field] = np.concatenate((-1*data_dict[field],data_dict[field][~overlap]))
             else:
@@ -162,22 +162,26 @@ def simdata_to_spatialdata(simdata)->SpatialData:
 
     #Assuming symmetric strain tensor
     tensor_components = ['xx','xy','xz','xy','yy','yz','xz','yz','zz']
-    
+    tensor_components_as = ['xx','xy','xz','yx','yy','yz','zx','zy','zz']
     # Get the stress and strain components in the file
     # Could be elastic, plastic, mechanical, stress or cauchy stress
 
     stresses = []
     strains = []
+    defgrads = []
     others = []
     for key in simdata.node_vars.keys():
         if 'stress_' in key:
             stresses.append(key[:-3])
         if 'strain_' in key:
             strains.append(key[:-3])
+        if 'deformation_gradient_' in key:
+            defgrads.append(key[:-3])
         if 'damage_' in key:
             others.append(key)
     stress_fields = np.unique(np.array(stresses))
     strain_fields = np.unique(np.array(strains))
+    def_fields = np.unique(np.array(defgrads))
     other_fields = np.unique(np.array(others))
     all_fields = np.concatenate((stress_fields,strain_fields))
     
@@ -186,6 +190,15 @@ def simdata_to_spatialdata(simdata)->SpatialData:
     for a_field in all_fields:
         stack = []
         for comp in tensor_components:
+            if any(a_field+'_'+comp in s for s in simdata.node_vars.keys()):
+                stack.append(data_dict[a_field+'_'+comp])
+            else:
+                stack.append(dummy)
+        data_fields[a_field] = rank_two_field(np.stack(stack,axis=1))
+
+    for a_field in def_fields:
+        stack = []
+        for comp in tensor_components_as:
             if any(a_field+'_'+comp in s for s in simdata.node_vars.keys()):
                 stack.append(data_dict[a_field+'_'+comp])
             else:
