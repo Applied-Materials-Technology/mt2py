@@ -179,6 +179,8 @@ def simdata_to_spatialdata(simdata)->SpatialData:
             defgrads.append(key[:-3])
         if 'damage_' in key:
             others.append(key)
+        if 'equivalent_plastic_strain' in key:
+            others.append(key)
     stress_fields = np.unique(np.array(stresses))
     strain_fields = np.unique(np.array(strains))
     def_fields = np.unique(np.array(defgrads))
