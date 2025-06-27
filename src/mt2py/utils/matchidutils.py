@@ -828,6 +828,31 @@ def read_matchid_coords(filename):
     #yc are flipped relative to normal
     return xc,-yc
 
+def get_grid_transform(xc, yc):
+    """Return a tuple of indices that will allow conversion from vector to gridded data. 
+
+    Args:
+        xc (_type_): _description_
+        yc (_type_): _description_
+    """
+
+    grid_spacing = int(np.max(np.diff(np.unique(yc))))
+    xcoords = np.arange(np.min(xc),np.max(xc)+1,grid_spacing)
+    ycoords = np.arange(np.min(yc),np.max(yc)+1,grid_spacing)
+
+    x,y = np.meshgrid(xcoords,ycoords)
+    
+    inds = []
+    for i in range(len(xc)):
+        match = np.where((x==xc[i])*(y==yc[i]))
+        inds.append([match[0][0],match[1][0]])
+
+    inds = np.array(inds)
+    filt = (inds[:,0],inds[:,1])
+
+    return x, y, filt
+
+
 def read_matchid(filename):
     """
     Method to read in matchid data. Be aware that the output format can change!
