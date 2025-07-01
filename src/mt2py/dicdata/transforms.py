@@ -16,6 +16,7 @@ def rot90(dicdata: DICData):
 
     rotdata.x = -dicdata.y.T
     rotdata.y = dicdata.x.T
+    rotdata.w = dicdata.w.T
 
     rotdata.exx = dicdata.eyy.swapaxes(1,2)
     rotdata.eyy = dicdata.exx.swapaxes(1,2)
