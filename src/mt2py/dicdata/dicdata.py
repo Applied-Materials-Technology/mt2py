@@ -3,6 +3,10 @@ from matplotlib import pyplot as plt
 from dataclasses import dataclass
 import numpy as np
 from pathlib import Path
+import pandas as pd
+from mt2py.utils.matchidutils import read_matchid_coords
+from mt2py.spatialdata.importmatchid import read_matchid_csv
+from mt2py.spatialdata.importmatchid import field_lookup
 
 @dataclass
 class DICData:
@@ -156,8 +160,8 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     w = np.zeros((nstep,) + xp.shape)*np.nan
 
     u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()]
-    v[:,filt[0],filt[1]] = f['DIC Data/Point Data/Vertical Displacement V'][()]
-    w[:,filt[0],filt[1]] = f['DIC Data/Point Data/Out-Of-Plane: W'][()]
+    v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()]
+    w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()]
     
     data.u = u
     data.v = v
@@ -250,3 +254,100 @@ def get_grid_transform(xc, yc):
     filt = (inds[:,0],inds[:,1])
 
     return x, y, filt
+
+
+
+def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v','w','exx','eyy','exy'],version='2024.1',strain_tensor='Logarithmic Euler-Almansi') -> DICData:
+    """Reads matchid data and converts to DICData format
+
+    Args:
+        folder_path (str): Path to folder containing matchid csv exports.
+        load_filename (str): Path to load file of matchid data.
+        fields (list, optional): List of fields to import onto the mesh, must exist in the csv data. Defaults to ['u','v','w','exx','eyy','exy'].
+        version (str): Software version (2023 and 2024.1 supported)
+    Returns:
+        DICData: DICData instance with appropriate metadata.
+    """
+
+    index, time, force = read_matchid_csv(load_filename)
+
+    data = DICData('MatchID')
+    data.strain_tensor = strain_tensor
+
+    data.force = force
+    data.time = time
+
+    nstep = len(force)
+    
+    files = list(folder_path.glob('*.csv'))
+    def get_ind(f):
+        return int(f.stem.split('_')[1])
+    
+    fsort = sorted(files,key=get_ind)
+
+    xc,yc = read_matchid_coords(fsort[0])
+
+    xp,yp,filt = get_grid_transform(xc,yc)
+
+    mask = np.ones_like(xp)*np.nan
+    mask[filt] = 1
+
+    data.mask = mask
+
+    initial = pd.read_csv(fsort[0])
+
+    x = np.zeros_like(xp)*np.nan
+    y = np.zeros_like(xp)*np.nan
+    z = np.zeros_like(xp)*np.nan
+
+    x[filt] = initial['coor.X [mm]']
+    y[filt] = initial['coor.Y [mm]']
+    z[filt] = initial['coor.Z [mm]']
+
+    data.x = x
+    data.y = y
+    data.z = z
+
+    data_dict = {}
+    for field in fields:
+        data_dict[field]= []
+
+    for file in files:
+        current_data = pd.read_csv(file)
+
+        for field in fields:
+                if field == 'v' or field =='w':
+                    data_dict[field].append(-current_data[field_lookup(field,version)].to_numpy())
+                else:
+                    data_dict[field].append(current_data[field_lookup(field,version)].to_numpy())
+
+    for field in fields:
+        data_dict[field] = np.array(data_dict[field]).T
+
+    # Displacments
+    u = np.zeros((nstep,) + xp.shape)*np.nan
+    v = np.zeros((nstep,) + xp.shape)*np.nan
+    w = np.zeros((nstep,) + xp.shape)*np.nan
+
+    u[:,filt[0],filt[1]] = data_dict['u'].T
+    v[:,filt[0],filt[1]] = data_dict['v'].T
+    w[:,filt[0],filt[1]] = data_dict['w'].T
+    
+    data.u = u
+    data.v = v
+    data.w = w    
+
+    #Strains
+    exx = np.zeros((nstep,) + xp.shape)*np.nan       
+    exy = np.zeros((nstep,) + xp.shape)*np.nan      
+    eyy = np.zeros((nstep,) + xp.shape)*np.nan 
+
+    exx[:,filt[0],filt[1]] = data_dict['exx'].T
+    eyy[:,filt[0],filt[1]] = data_dict['eyy'].T
+    exy[:,filt[0],filt[1]] = data_dict['exy'].T
+    
+    data.exx = exx
+    data.eyy = eyy
+    data.exy = exy
+
+    return data
