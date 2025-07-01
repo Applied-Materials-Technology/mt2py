@@ -154,8 +154,8 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     xp,yp,filt = get_grid_transform(xc,yc)
 
-    mask = np.ones_like(xp)*np.nan
-    mask[filt] = 1
+    mask = np.zeros_like(xp,dtype=bool)
+    mask[filt] = True
 
     data.mask = mask
 
@@ -315,8 +315,8 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
 
     xp,yp,filt = get_grid_transform(xc,yc)
 
-    mask = np.ones_like(xp)*np.nan
-    mask[filt] = 1
+    mask = np.zeros_like(xp,dtype=bool)
+    mask[filt] = True
 
     data.mask = mask
 
