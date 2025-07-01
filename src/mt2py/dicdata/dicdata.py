@@ -33,7 +33,7 @@ class DICData:
     """ Force values
     """
 
-    nstep: int
+    nstep: int = 0
 
     # Spatial Variables
 
