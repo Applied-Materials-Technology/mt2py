@@ -164,10 +164,16 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     x = np.zeros_like(xp)*np.nan
     y = np.zeros_like(xp)*np.nan
     z = np.zeros_like(xp)*np.nan
-
-    x[filt] = f['DIC Data/Point Data/X'][0,:]
-    y[filt] = f['DIC Data/Point Data/Y'][0,:]
-    z[filt] = f['DIC Data/Point Data/Z'][0,:]
+    
+    if 'Corrected U' in f['DIC Data/Point Data'].keys():
+        #Use rigid body corrected data
+        x[filt] = f['DIC Data/Point Data/Corrected X'][0,:]
+        y[filt] = f['DIC Data/Point Data/Corrected Y'][0,:]
+        z[filt] = f['DIC Data/Point Data/Corrected Z'][0,:]
+    else:
+        x[filt] = f['DIC Data/Point Data/X'][0,:]
+        y[filt] = f['DIC Data/Point Data/Y'][0,:]
+        z[filt] = f['DIC Data/Point Data/Z'][0,:]
 
     data.x = x
     data.y = y
@@ -178,9 +184,15 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     v = np.zeros((nstep,) + xp.shape)*np.nan
     w = np.zeros((nstep,) + xp.shape)*np.nan
 
-    u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()][indices,...]
-    v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()][indices,...]
-    w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()][indices,...]
+    if 'Corrected U' in f['DIC Data/Point Data'].keys():
+        u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Corrected U'][()][indices,...]
+        v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Corrected V'][()][indices,...]
+        w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Corrected W'][()][indices,...]
+
+    else:
+        u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()][indices,...]
+        v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()][indices,...]
+        w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()][indices,...]
     
     data.u = u
     data.v = v
