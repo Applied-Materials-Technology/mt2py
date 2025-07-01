@@ -33,6 +33,8 @@ class DICData:
     """ Force values
     """
 
+    nstep: int
+
     # Spatial Variables
 
     coordinates: np.ndarray | None = None
@@ -106,11 +108,17 @@ class DICData:
 
 
 
-def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False):
-    """ Import MatchID data from HDF5 to DICData format
+def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False,indices=None):
+    """Import MatchID data from HDF5 to DICData format
 
     Args:
-        filepath (Path): Path to HDF5 file.
+        filepath (Path): Path to HDF5 file
+        strain_tensor (str, optional): _Strain tensor used by MatchID. Defaults to 'Logaritmic Euler-Almansi'.
+        def_grad (bool, optional): Include deformation gradients. Defaults to False.
+        indices (list[int], optional): indices to import. Defaults to None.
+
+    Returns:
+        _type_: _description_
     """
 
     data = DICData('MatchID')
@@ -118,6 +126,8 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     #Read Data
     f = h5py.File(filepath, 'r')
+
+
     
     # Global Data
     force = f['DIC Data/Temporal Data/Force'][()].squeeze()
@@ -125,8 +135,17 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     nstep = len(force)
 
-    data.force = force
-    data.time = time
+    if indices is None:
+        indices = np.arange(nstep)
+
+    nstep = len(indices)
+
+    data.nstep = nstep
+
+    data.force = force[indices]
+    data.time = time[indices]
+
+    
 
     # Get the data gridded correctly using pixel coordinates
     coordinates = f['DIC Data/Mapping Data/Spatial - Point Locations'][()]
@@ -159,9 +178,9 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     v = np.zeros((nstep,) + xp.shape)*np.nan
     w = np.zeros((nstep,) + xp.shape)*np.nan
 
-    u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()]
-    v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()]
-    w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()]
+    u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()][indices,...]
+    v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()][indices,...]
+    w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()][indices,...]
     
     data.u = u
     data.v = v
@@ -172,9 +191,9 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     exy = np.zeros((nstep,) + xp.shape)*np.nan      
     eyy = np.zeros((nstep,) + xp.shape)*np.nan 
 
-    exx[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exx'][()]
-    eyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Eyy'][()]
-    exy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exy'][()]
+    exx[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exx'][()][indices,...]
+    eyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Eyy'][()][indices,...]
+    exy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exy'][()][indices,...]
     
     data.exx = exx
     data.eyy = eyy
@@ -192,15 +211,15 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
         Fzy = np.zeros((nstep,) + xp.shape)*np.nan 
         Fzz = np.zeros((nstep,) + xp.shape)*np.nan 
 
-        Fxx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fxy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fxz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fyx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fyz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fzx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fzy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
-        Fzz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()]
+        Fxx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fxy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fxz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fyx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fyz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fzx[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fzy[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
+        Fzz[:,filt[0],filt[1]] = f['DIC Data/Point Data/F[0,0]'][()][indices,...]
 
         data.Fxx = Fxx
         data.Fxy = Fxy
@@ -214,17 +233,17 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     # Data quality
     epipolar_distance = np.zeros((nstep,) + xp.shape)*np.nan 
-    epipolar_distance[:,filt[0],filt[1]] = f['DIC Data/Point Data/Epipolar Distance'][()]
+    epipolar_distance[:,filt[0],filt[1]] = f['DIC Data/Point Data/Epipolar Distance'][()][indices,...]
     
     data.epipolar_distance = epipolar_distance
 
     correlation_2D = np.zeros((nstep,) + xp.shape)*np.nan 
-    correlation_2D[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value 2D'][()]
+    correlation_2D[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value 2D'][()][indices,...]
     
     data.correlation_2D = correlation_2D
 
     correlation_persp = np.zeros((nstep,) + xp.shape)*np.nan 
-    correlation_persp[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value Persp'][()]
+    correlation_persp[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value Persp'][()][indices,...]
     
     data.correlation_persp = correlation_persp
 
@@ -257,7 +276,7 @@ def get_grid_transform(xc, yc):
 
 
 
-def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v','w','exx','eyy','exy'],version='2024.1',strain_tensor='Logarithmic Euler-Almansi') -> DICData:
+def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v','w','exx','eyy','exy'],version='2024.1',strain_tensor='Logarithmic Euler-Almansi',indices=None) -> DICData:
     """Reads matchid data and converts to DICData format
 
     Args:
@@ -271,13 +290,20 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
 
     index, time, force = read_matchid_csv(load_filename)
 
+    nstep = len(force)
+
+    if indices is None:
+        indices = np.arange(nstep,dtype=int)
+
+    nstep = len(indices)
+
+    data.nstep = nstep
+
     data = DICData('MatchID')
     data.strain_tensor = strain_tensor
 
-    data.force = force
-    data.time = time
-
-    nstep = len(force)
+    data.force = force[indices]
+    data.time = time[indices]
     
     files = list(folder_path.glob('*.csv'))
     def get_ind(f):
@@ -312,7 +338,7 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
     for field in fields:
         data_dict[field]= []
 
-    for file in files:
+    for file in [fsort[i] for i in indices]:
         current_data = pd.read_csv(file)
 
         for field in fields:
