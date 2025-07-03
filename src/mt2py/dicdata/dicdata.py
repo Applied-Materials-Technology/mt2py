@@ -7,6 +7,7 @@ import pandas as pd
 from mt2py.utils.matchidutils import read_matchid_coords
 from mt2py.spatialdata.importmatchid import read_matchid_csv
 from mt2py.spatialdata.importmatchid import field_lookup
+from mt2py.datafilters.datafilters import FastFilter
 
 @dataclass
 class DICData:
@@ -389,3 +390,35 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
     data.exy = exy
 
     return data
+
+
+def fe_spatialdata_to_dicdata(fe_spatialdata,grid_spacing,exclude_limit=30):
+    """ Take FE data already in a spatialdata format, interpolate
+    to a grid of spacing grid_spacing and convert to dicdata format. 
+    Initially the strains will be interpolated strains.
+    """
+
+    x,y,data_dict_alt = FastFilter.interpolate_to_grid_generic(fe_spatialdata,grid_spacing,exclude_limit)
+    
+    data = DICData('MOOSE')
+    data.strain_tensor = 'small'
+
+    data.force = fe_spatialdata.load
+    data.time = fe_spatialdata.time
+
+    data.x = x
+    data.y = y
+    data.z = np.ones_like(x)*np.max(fe_spatialdata.mesh_data.points[:,2])
+
+    data.u = np.moveaxis(data_dict_alt['displacement'],2,0)[:,:,:,0]
+    data.v = np.moveaxis(data_dict_alt['displacement'],2,0)[:,:,:,1]
+    data.w = np.moveaxis(data_dict_alt['displacement'],2,0)[:,:,:,2]
+
+    data.exx = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,0]
+    data.eyy = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,4]
+    data.ezz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,8]
+    data.eyz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,4]
+    data.exz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,3]
+    data.exy = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,1]
+
+    return data, data_dict_alt

@@ -190,7 +190,7 @@ class FastFilter(DataFilterBase):
         xr = np.linspace(bounds[0],bounds[1],int((bounds[1]-bounds[0])/spacing))
         yr = np.linspace(bounds[2],bounds[3],int((bounds[3]-bounds[2])/spacing))
         zr = bounds[5]
-        x,y = np.meshgrid(xr,yr,indexing='ij')
+        x,y = np.meshgrid(xr,yr)#,indexing='ij')
         # Add Nans to the array for outline the edges of the specimen
         
 
@@ -211,7 +211,7 @@ class FastFilter(DataFilterBase):
             data_dict[field] = dat_int
         
         # Create pyvista mesh 
-        x,y = np.meshgrid(xr,yr,indexing='ij')
+        x,y = np.meshgrid(xr,yr)#,indexing='ij')
 
         dat_int = np.reshape(dat_int,(x.shape[0],x.shape[1],fe_data.n_steps,n_comp))
         nan_mask = np.isnan(dat_int[...,0,0])
