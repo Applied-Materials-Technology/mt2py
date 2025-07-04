@@ -417,8 +417,8 @@ def fe_spatialdata_to_dicdata(fe_spatialdata,grid_spacing,exclude_limit=30):
     data.exx = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,0]
     data.eyy = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,4]
     data.ezz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,8]
-    data.eyz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,4]
-    data.exz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,3]
+    data.eyz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,3]
+    data.exz = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,2]
     data.exy = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,1]
 
     return data, data_dict_alt
