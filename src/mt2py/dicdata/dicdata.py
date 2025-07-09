@@ -501,6 +501,9 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     dicdata = DICData('MOOSE')
     dicdata.strain_tensor = 'small'
 
+    dicdata.force = fe_data.load
+    dicdata.time = fe_data.time
+
     dicdata.x = x
     dicdata.y = y
     dicdata.z = z.squeeze()
