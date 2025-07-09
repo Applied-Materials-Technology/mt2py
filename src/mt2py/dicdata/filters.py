@@ -82,7 +82,7 @@ def small_strain(dudx,dudy,dvdx,dvdy):
     """
     exx = dudx
     eyy = dvdy
-    exy = (dudy + dvdx)
+    exy = 0.5*(dudy + dvdx)
     return exx,eyy,exy
 
 def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='small')->tuple[npt.NDArray,npt.NDArray,npt.NDArray]:
