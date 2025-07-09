@@ -8,6 +8,8 @@ from mt2py.utils.matchidutils import read_matchid_coords
 from mt2py.spatialdata.importmatchid import read_matchid_csv
 from mt2py.spatialdata.importmatchid import field_lookup
 from mt2py.datafilters.datafilters import FastFilter
+from mt2py.spatialdata.spatialdata import SpatialData
+import pyvista as pv
 
 @dataclass
 class DICData:
@@ -392,7 +394,7 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
     return data
 
 
-def fe_spatialdata_to_dicdata(fe_spatialdata,grid_spacing,exclude_limit=30):
+def fe_spatialdata_to_dicdata_lin(fe_spatialdata,grid_spacing,exclude_limit=30):
     """ Take FE data already in a spatialdata format, interpolate
     to a grid of spacing grid_spacing and convert to dicdata format. 
     Initially the strains will be interpolated strains.
@@ -422,3 +424,96 @@ def fe_spatialdata_to_dicdata(fe_spatialdata,grid_spacing,exclude_limit=30):
     data.exy = np.moveaxis(data_dict_alt['mechanical_strain'],2,0)[:,:,:,1]
 
     return data, data_dict_alt
+
+
+def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DICData:
+    """Use pyvista (and mesh shape functions) to interpolate FE data
+    already in spatialdata format to a regular grid and create a 
+    dicdata object.
+
+    Args:
+        fe_data (SpatialData): Data from FE in spatial data format
+        grid_spacing (float, optional): Spacing of grid to interpolate to. Defaults to 0.2.
+
+    Returns:
+        DICData: DICData object with the values FE values interpolated to the grid
+    """
+
+    # Create regular grid to interpolate to
+    bounds = fe_data.mesh_data.bounds
+    xr = np.linspace(bounds[0],bounds[1],int((bounds[1]-bounds[0])/grid_spacing))
+    yr = np.linspace(bounds[2],bounds[3],int((bounds[3]-bounds[2])/grid_spacing))
+    zr = bounds[5]
+    x,y,z = np.meshgrid(xr,yr,zr)
+    grid = pv.StructuredGrid(x,y,z)
+    # Get mesh data
+    mesh_data = fe_data.mesh_data
+    x= x.squeeze()
+    y =y.squeeze()
+    # Allocate empty arrays
+    u = np.empty((fe_data.n_steps,)+x.shape)
+    v = np.empty((fe_data.n_steps,)+x.shape)
+    w = np.empty((fe_data.n_steps,)+x.shape)
+    exx = np.empty((fe_data.n_steps,)+x.shape)
+    eyy = np.empty((fe_data.n_steps,)+x.shape)
+    ezz = np.empty((fe_data.n_steps,)+x.shape)
+    eyz = np.empty((fe_data.n_steps,)+x.shape)
+    exz = np.empty((fe_data.n_steps,)+x.shape)
+    exy = np.empty((fe_data.n_steps,)+x.shape)
+
+    fields = ['displacement','mechanical_strain']
+    # Iterate over each timestep and interpolate using shape functions
+    for t in range(fe_data.n_steps):
+        for field in fields:
+            mesh_data[field] = fe_data.data_fields[field].data[:,:,t]
+        result = grid.sample(mesh_data)
+        mask = ~np.array(result['vtkValidPointMask'],dtype=bool).reshape(x.shape,order='F')
+
+        u[t,:,:] = result['displacement'][:,0].reshape(x.shape,order='F')
+        u[t,mask] = np.nan
+
+        v[t,:,:] = result['displacement'][:,1].reshape(x.shape,order='F')
+        v[t,mask] = np.nan
+
+        w[t,:,:] = result['displacement'][:,2].reshape(x.shape,order='F')
+        w[t,mask] = np.nan
+
+        exx[t,:,:] = result['mechanical_strain'][:,0].reshape(x.shape,order='F')
+        exx[t,mask] = np.nan
+
+        eyy[t,:,:] = result['mechanical_strain'][:,4].reshape(x.shape,order='F')
+        eyy[t,mask] = np.nan
+
+        ezz[t,:,:] = result['mechanical_strain'][:,8].reshape(x.shape,order='F')
+        ezz[t,mask] = np.nan
+
+        eyz[t,:,:] = result['mechanical_strain'][:,5].reshape(x.shape,order='F')
+        eyz[t,mask] = np.nan
+
+        exz[t,:,:] = result['mechanical_strain'][:,2].reshape(x.shape,order='F')
+        exz[t,mask] = np.nan
+
+        exy[t,:,:] = result['mechanical_strain'][:,1].reshape(x.shape,order='F')
+        exy[t,mask] = np.nan
+
+
+
+    dicdata = DICData('MOOSE')
+    dicdata.strain_tensor = 'small'
+
+    dicdata.x = x
+    dicdata.y = y
+    dicdata.z = z.squeeze()
+
+    dicdata.u = u
+    dicdata.v = v
+    dicdata.w = w
+
+    dicdata.exx = exx
+    dicdata.eyy = eyy
+    dicdata.ezz = ezz
+    dicdata.exz = exz
+    dicdata.eyz = eyz
+    dicdata.exy = exy
+
+    return dicdata
