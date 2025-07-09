@@ -125,12 +125,12 @@ def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='s
             upper_j = min([j+window_width,ylim])
 
             # Get x data of window
-            point_data = points[lower_j:upper_j,lower_i:upper_i,:]
+            point_data = points[lower_j:upper_j+1,lower_i:upper_i+1,:]
             point_centre = points[j,i,:]
 
             #Get u and v in window
-            u_data = dicdata.u[:,lower_j:upper_j,lower_i:upper_i]
-            v_data = dicdata.v[:,lower_j:upper_j,lower_i:upper_i]
+            u_data = dicdata.u[:,lower_j:upper_j+1,lower_i:upper_i+1]
+            v_data = dicdata.v[:,lower_j:upper_j+1,lower_i:upper_i+1]
 
             # Lstsq cant handle nans
             mask = ~np.isnan(point_data[:,:,0])
