@@ -505,6 +505,8 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     dicdata.y = y
     dicdata.z = z.squeeze()
 
+    dicdata.mask = ~mask
+
     dicdata.u = u
     dicdata.v = v
     dicdata.w = w
