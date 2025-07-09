@@ -461,7 +461,14 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     exz = np.empty((fe_data.n_steps,)+x.shape)
     exy = np.empty((fe_data.n_steps,)+x.shape)
 
-    fields = ['displacement','mechanical_strain']
+    sxx = np.empty((fe_data.n_steps,)+x.shape)
+    syy = np.empty((fe_data.n_steps,)+x.shape)
+    szz = np.empty((fe_data.n_steps,)+x.shape)
+    syz = np.empty((fe_data.n_steps,)+x.shape)
+    sxz = np.empty((fe_data.n_steps,)+x.shape)
+    sxy = np.empty((fe_data.n_steps,)+x.shape)
+
+    fields = ['displacement','mechanical_strain','cauchy_stress']
     # Iterate over each timestep and interpolate using shape functions
     for t in range(fe_data.n_steps):
         for field in fields:
@@ -496,6 +503,24 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
         exy[t,:,:] = result['mechanical_strain'][:,1].reshape(x.shape,order='F')
         exy[t,mask] = np.nan
 
+        sxx[t,:,:] = result['cauchy_stress'][:,0].reshape(x.shape,order='F')
+        sxx[t,mask] = np.nan
+
+        syy[t,:,:] = result['cauchy_stress'][:,4].reshape(x.shape,order='F')
+        syy[t,mask] = np.nan
+
+        szz[t,:,:] = result['cauchy_stress'][:,8].reshape(x.shape,order='F')
+        szz[t,mask] = np.nan
+
+        syz[t,:,:] = result['cauchy_stress'][:,5].reshape(x.shape,order='F')
+        syz[t,mask] = np.nan
+
+        sxz[t,:,:] = result['cauchy_stress'][:,2].reshape(x.shape,order='F')
+        sxz[t,mask] = np.nan
+
+        sxy[t,:,:] = result['cauchy_stress'][:,1].reshape(x.shape,order='F')
+        sxy[t,mask] = np.nan
+
 
 
     dicdata = DICData('MOOSE')
@@ -521,4 +546,6 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     dicdata.eyz = eyz
     dicdata.exy = exy
 
-    return dicdata
+    stresses = [sxx,syy,szz,syz,sxz,sxy]
+
+    return dicdata, stresses
