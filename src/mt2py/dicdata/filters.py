@@ -153,3 +153,29 @@ def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='s
 
     return exx,eyy,exy
 
+def add_gaussian_displacement_noise(dicdata:DICData,stdev:float=1e-5)->None:
+    """ Adds gaussian noise to displacements with 0 mean 0 and stdev to 
+    dicdata object in place
+    Adds a separate copy to u and v displacements drawn from the same distribution   
+
+    Args:
+        dicdata (DICData): DICdata object
+        stdev (float, optional): Magnitude of noise. Defaults to 1e-5.
+    """
+    u_noise = np.random.normal(0,stdev,dicdata.u.shape)
+    v_noise = np.random.normal(0,stdev,dicdata.v.shape)
+
+    dicdata.u = dicdata.u + u_noise
+    dicdata.v = dicdata.v + v_noise
+
+def add_force_noise(dicdata:DICData,deviation:float=5e-3)->None:
+    """Adds uniform noise to the force of dicdata
+    Noise is drawn from a uniform distribution in the range +-deviation
+    For a typical load cell the deviation is 0.5% = 5e-3
+
+    Args:
+        dicdata (DICData): dicdata object
+        deviation (float, optional): Size of the noise. Defaults to 5e-3.
+    """
+    force_noise = 1+(np.random.rand(len(dicdata.force))*2*deviation)-deviation
+    dicdata.force = dicdata.force*force_noise
