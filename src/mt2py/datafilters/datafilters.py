@@ -776,7 +776,7 @@ class DiceFilter(DataFilterBase):
                 
         return coords, disp_x, disp_y
                 
-    def run_filter(self,fedata: SpatialData):
+    def run_filter(self,fedata: SpatialData, noise_level=None):
 
         # Do some image deformation
         coords, disp_x, disp_y = self.preprocess_images(fedata,self.time_steps)
@@ -801,6 +801,10 @@ class DiceFilter(DataFilterBase):
                                                 np.array((disp_x[:,ff],disp_y[:,ff])).T,
                                                 image_mask=self.image_mask,
                                                 print_on=print_on)
+            
+            if noise_level is not None:
+                image_noise = np.random.normal(0,noise_level,def_image.shape)
+                def_image = def_image + image_noise
 
             save_file = self.image_def_opts.save_path / str(f'{self.image_def_opts.save_tag}_'+
                     f'{sid.get_image_num_str(im_num=ff,width=4)}'+
