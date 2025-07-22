@@ -803,7 +803,9 @@ class DiceFilter(DataFilterBase):
                                                 print_on=print_on)
             
             if noise_level is not None:
-                image_noise = np.random.normal(0,noise_level,def_image.shape)
+                #image_noise = np.random.normal(0,noise_level,def_image.shape)
+                #def_image = def_image + image_noise
+                image_noise = heteroscedastic_noise(def_image,noise_level)
                 def_image = def_image + image_noise
 
             save_file = self.image_def_opts.save_path / str(f'{self.image_def_opts.save_tag}_'+
@@ -832,3 +834,10 @@ class DiceFilter(DataFilterBase):
         all_sim_data = exodus_reader.read_all_sim_data()
         filtered_data = simdata_dice_to_spatialdata(all_sim_data,self.camera_opts.m_per_px,self.camera_opts.roi_loc)
         return filtered_data
+    
+
+
+def heteroscedastic_noise(base_image,polyfit):
+    rng = np.random.default_rng()
+    s = rng.normal(0, polyfit(base_image), base_image.shape)
+    return s
