@@ -30,10 +30,10 @@ def noise_assess(folder_path,output_average_path=None,plots=False):
         out_avg.save(output_average_path)
 
     deviations = np.zeros(256)
-    noise_deviation = np.std(noise,axis=1)
+    noise_deviation = np.nanstd(noise,axis=1)
     for i in range(256):
         inds = np.where(base_image.ravel()==i)[0]
-        deviations[i] = np.mean(noise_deviation[inds])
+        deviations[i] = np.nanmean(noise_deviation[inds])
 
 
     grey_levels = np.arange(256)
