@@ -38,6 +38,11 @@ def noise_assess(folder_path,output_average_path=None,plots=False):
 
     grey_levels = np.arange(256)
 
+    mask = ~np.isnan(deviations)
+
+    grey_levels = grey_levels[mask]
+    deviations = deviations[mask]
+
     p =np.polynomial.polynomial.Polynomial.fit(grey_levels,deviations,6)
     
     if plots:
