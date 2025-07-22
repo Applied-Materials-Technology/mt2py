@@ -9,6 +9,7 @@ from mt2py.spatialdata.importmatchid import read_matchid_csv
 from mt2py.spatialdata.importmatchid import field_lookup
 from mt2py.datafilters.datafilters import FastFilter
 from mt2py.spatialdata.spatialdata import SpatialData
+from mt2py.reader.exodus import ExodusReader
 import pyvista as pv
 
 @dataclass
@@ -549,3 +550,84 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     stresses = [sxx,syy,szz,syz,sxz,sxy]
 
     return dicdata, stresses
+
+
+
+def dice_to_dicdata(dic_filepath : Path,fe_filepath: Path,image_scale = 1.,indices=None):
+    """Import MatchID data from HDF5 to DICData format
+
+    Args:
+       filepath (Path): Path to HDF5 file
+       indices (list[int], optional): indices to import. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+
+    data = DICData('DICe')
+    data.strain_tensor = None
+
+    #Read Data
+    fe_data = ExodusReader(Path(fe_filepath))
+    fe_sim_data = fe_data.read_all_sim_data()
+    
+    # Global Data
+    force = fe_sim_data.glob_vars['react_y']
+    time =fe_sim_data.time
+
+    dic_data = ExodusReader(Path(dic_filepath))
+    dic_sim_data = dic_data.read_all_sim_data()
+
+    nstep = len(force)
+
+    if indices is None:
+        indices = np.arange(nstep)
+
+    nstep = len(indices)
+
+    data.nstep = nstep
+
+    data.force = force[indices]
+    data.time = time[indices]
+
+    
+
+    # Get the data gridded correctly using pixel coordinates
+    coordinates = dic_sim_data.coords
+    xc = coordinates[:,0]
+    yc = -coordinates[:,1] #MatchID has flipped y axis
+
+    xp,yp,filt = get_grid_transform(xc,yc)
+
+    mask = np.zeros_like(xp,dtype=bool)
+    mask[filt] = True
+
+    data.mask = mask
+
+
+    # Initial coordinates
+    x = np.zeros_like(xp)*np.nan
+    y = np.zeros_like(xp)*np.nan
+    z = np.zeros_like(xp)*np.nan
+    
+    x[filt] = dic_sim_data.coords[:,0]
+    y[filt] = dic_sim_data.coords[:,1]
+    z[filt] = dic_sim_data.coords[:,2]
+
+    data.x = x
+    data.y = y
+    data.z = z
+
+    # Displacments
+    u = np.zeros((nstep,) + xp.shape)*np.nan
+    v = np.zeros((nstep,) + xp.shape)*np.nan
+    w = np.zeros((nstep,) + xp.shape)*np.nan
+
+    u[:,filt[0],filt[1]] = image_scale*dic_sim_data.node_vars['DISPLACEMENT_X'][:,indices].T
+    v[:,filt[0],filt[1]] = image_scale*dic_sim_data.node_vars['DISPLACEMENT_Y'][:,indices].T
+    
+    data.u = u
+    data.v = v
+    data.w = w    
+
+    return data
