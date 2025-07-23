@@ -610,9 +610,9 @@ def dice_to_dicdata(dic_filepath : Path,fe_filepath: Path,image_scale = 1.,indic
     y = np.zeros_like(xp)*np.nan
     z = np.zeros_like(xp)*np.nan
     
-    x[filt] = dic_sim_data.coords[:,0]
-    y[filt] = dic_sim_data.coords[:,1]
-    z[filt] = dic_sim_data.coords[:,2]
+    x[filt] = dic_sim_data.coords[:,0]*image_scale
+    y[filt] = dic_sim_data.coords[:,1]*image_scale
+    z[filt] = dic_sim_data.coords[:,2]*image_scale
 
     data.x = x
     data.y = y
