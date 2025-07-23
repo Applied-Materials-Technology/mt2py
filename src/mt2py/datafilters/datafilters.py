@@ -608,7 +608,7 @@ class DiceManager:
         root.find(".//*[@name='reference_image']").set('value',str(files[0]))
 
         # Update the output folder path
-        root.find(".//*[@name='output_folder']").set('value',self.dice_opts.output_folder)
+        root.find(".//*[@name='output_folder']").set('value',str(self.dice_opts.output_folder)+'/')
 
         # Update the deformed image path list
         for file in files[1:]:
