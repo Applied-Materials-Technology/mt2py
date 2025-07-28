@@ -135,6 +135,14 @@ def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='s
             # Lstsq cant handle nans
             mask = ~np.isnan(point_data[:,:,0])
 
+            # If the VSG is less than half full 
+            if mask.size < (window_size**2):
+                dudx[:,j,i] = np.nan
+                dudy[:,j,i] = np.nan
+                dvdx[:,j,i] = np.nan
+                dvdy[:,j,i] = np.nan
+                continue
+
             #du/
             A = Qfunc(point_data[mask])
             b = u_data[:,mask].T
