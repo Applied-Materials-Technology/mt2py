@@ -46,34 +46,42 @@ class Caller():
         # If there is a gmsh run it.
         if self.gmsh_clc is not None:
             result = subprocess.run(self.gmsh_clc.return_call_args(parameter_group,self.output_dir),capture_output=True,shell=False)
+
         
-        arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
-        
-        if self.moose_timing is not None:
-            if 'sync_times' in self.moose_timing:
-                arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.moose_timing['sync_times']))
+        if self.moose_clc is not None:
+            arg_list = self.moose_clc.return_call_args(parameter_group,self.output_dir)
+            
+            if self.moose_timing is not None:
+                if 'sync_times' in self.moose_timing:
+                    arg_list.append('Outputs/out/sync_times='+ ' '.join(str(x) for x in self.moose_timing['sync_times']))
 
-            if 'end_time' in self.moose_timing:
-                arg_list.append('Executioner/end_time='+ str(self.moose_timing['end_time']))
+                if 'end_time' in self.moose_timing:
+                    arg_list.append('Executioner/end_time='+ str(self.moose_timing['end_time']))
 
-            if 'time_file' in self.moose_timing:
-                arg_list.append(self.moose_timing['time_name']+'='+ str(self.moose_timing['time_file']))
+                if 'time_file' in self.moose_timing:
+                    arg_list.append(self.moose_timing['time_name']+'='+ str(self.moose_timing['time_file']))
 
-        if self.gmsh_clc is not None:
-            filename = self.gmsh_clc.source + '-' + str(parameter_group.id)
+            if self.gmsh_clc is not None:
+                filename = self.gmsh_clc.source + '-' + str(parameter_group.id)
+                output_path = self.output_dir / filename
+                arg_list.append('Mesh/file={}.msh'.format(str(output_path)))
+            
+            #arg_list.append('--redirect-stdout')
+            #print(arg_list)
+            
+            result = subprocess.run(arg_list,capture_output=True,shell=False)
+            #print(result)
+            #if '*** ERROR ***' in result:
+            filename = self.moose_clc.source + '-' + str(parameter_group.id)
             output_path = self.output_dir / filename
-            arg_list.append('Mesh/file={}.msh'.format(str(output_path)))
-        
-        #arg_list.append('--redirect-stdout')
-        #print(arg_list)
-        
-        result = subprocess.run(arg_list,capture_output=True,shell=False)
-        #print(result)
-        #if '*** ERROR ***' in result:
-        filename = self.moose_clc.source + '-' + str(parameter_group.id)
-        output_path = self.output_dir / filename
 
-        return output_path.with_suffix('.e')
+            return output_path.with_suffix('.e')
+        
+        else:
+            output_path = self.output_dir / ('gmsh' + str(parameter_group.id))
+            return output_path.with_suffix('.msh')
+        
+
     
     def call_parallel(self,parameter_groups: list[Group])->list[Path]:
         """Call the execution in parallel. If there's Gmsh there it will run it first.
