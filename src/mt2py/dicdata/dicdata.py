@@ -479,7 +479,9 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     sxz = np.empty((fe_data.n_steps,)+x.shape)
     sxy = np.empty((fe_data.n_steps,)+x.shape)
 
-    fields = ['displacement','mechanical_strain','cauchy_stress','deformation_gradient']
+    fields = ['displacement','mechanical_strain','cauchy_stress']
+    if 'deformation_gradient' in fe_data.data_fields:
+        fields.append('deformation_gradient')
     # Iterate over each timestep and interpolate using shape functions
     for t in range(fe_data.n_steps):
         for field in fields:
