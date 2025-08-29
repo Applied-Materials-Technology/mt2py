@@ -462,6 +462,16 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     exz = np.empty((fe_data.n_steps,)+x.shape)
     exy = np.empty((fe_data.n_steps,)+x.shape)
 
+    Fxx = np.empty((fe_data.n_steps,)+x.shape)
+    Fxy = np.empty((fe_data.n_steps,)+x.shape)
+    Fxz = np.empty((fe_data.n_steps,)+x.shape)
+    Fyx = np.empty((fe_data.n_steps,)+x.shape)
+    Fyy = np.empty((fe_data.n_steps,)+x.shape)
+    Fyz = np.empty((fe_data.n_steps,)+x.shape)
+    Fzx = np.empty((fe_data.n_steps,)+x.shape)
+    Fzy = np.empty((fe_data.n_steps,)+x.shape)
+    Fzz = np.empty((fe_data.n_steps,)+x.shape)
+    
     sxx = np.empty((fe_data.n_steps,)+x.shape)
     syy = np.empty((fe_data.n_steps,)+x.shape)
     szz = np.empty((fe_data.n_steps,)+x.shape)
@@ -470,6 +480,8 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     sxy = np.empty((fe_data.n_steps,)+x.shape)
 
     fields = ['displacement','mechanical_strain','cauchy_stress']
+    if 'deformation_gradient' in fe_data.data_fields:
+        fields.append('deformation_gradient')
     # Iterate over each timestep and interpolate using shape functions
     for t in range(fe_data.n_steps):
         for field in fields:
@@ -522,7 +534,33 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
         sxy[t,:,:] = result['cauchy_stress'][:,1].reshape(x.shape,order='F')
         sxy[t,mask] = np.nan
 
+        if field == 'deformation_gradient':
+            Fxx[t,:,:] = result['deformation_gradient'][:,0].reshape(x.shape,order='F')
+            Fxx[t,mask] = np.nan
 
+            Fxy[t,:,:] = result['deformation_gradient'][:,1].reshape(x.shape,order='F')
+            Fxy[t,mask] = np.nan
+
+            Fxz[t,:,:] = result['deformation_gradient'][:,2].reshape(x.shape,order='F')
+            Fxz[t,mask] = np.nan
+
+            Fyx[t,:,:] = result['deformation_gradient'][:,3].reshape(x.shape,order='F')
+            Fyx[t,mask] = np.nan
+
+            Fyy[t,:,:] = result['deformation_gradient'][:,4].reshape(x.shape,order='F')
+            Fyy[t,mask] = np.nan
+
+            Fyz[t,:,:] = result['deformation_gradient'][:,5].reshape(x.shape,order='F')
+            Fyz[t,mask] = np.nan
+
+            Fzx[t,:,:] = result['deformation_gradient'][:,6].reshape(x.shape,order='F')
+            Fzx[t,mask] = np.nan
+
+            Fzy[t,:,:] = result['deformation_gradient'][:,7].reshape(x.shape,order='F')
+            Fzy[t,mask] = np.nan
+
+            Fzz[t,:,:] = result['deformation_gradient'][:,8].reshape(x.shape,order='F')
+            Fzz[t,mask] = np.nan
 
     dicdata = DICData('MOOSE')
     dicdata.strain_tensor = 'small'
@@ -546,6 +584,16 @@ def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DIC
     dicdata.exz = exz
     dicdata.eyz = eyz
     dicdata.exy = exy
+
+    dicdata.Fxx = Fxx
+    dicdata.Fxy = Fxy
+    dicdata.Fxz = Fxz
+    dicdata.Fyx = Fyx
+    dicdata.Fyy = Fyy
+    dicdata.Fyz = Fyz
+    dicdata.Fzx = Fzx
+    dicdata.Fzy = Fzy
+    dicdata.Fzz = Fzz
 
     stresses = [sxx,syy,szz,syz,sxz,sxy]
 
