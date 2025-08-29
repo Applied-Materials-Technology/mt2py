@@ -146,3 +146,4 @@ examples/outputs
 examples/data
 
 sloth-opt
+*.png
