@@ -2,14 +2,16 @@
 # Single Element model for fitting viscoplastic model to
 # Stress-Strain Data
 
-neml2_model = 'rate_independent_plasticity_isoharden.i'
+neml2_model = 'viscoplasticity_isoharden.i'
 
 endtime = 10
 
-max_disp = -1
+max_disp = -0.1
 
-yield =50
+yield =5
 hard_mod= 1000
+n = 2
+eta=100
 
 
 [GlobalParams]
@@ -25,6 +27,8 @@ hard_mod= 1000
   input = '../examples/neml2_models/${neml2_model}'
   # We can pass arguments to NEML2 to modify the values in the file here
   cli_args = 'Models/yield/yield_stress=${yield}
+              Models/flow_rate/reference_stress=${eta}
+              Models/flow_rate/exponent=${n}
               Models/isoharden/hardening_modulus=${hard_mod}'
   
   [all]
@@ -32,20 +36,20 @@ hard_mod= 1000
     #verbose = true
     device = 'cpu'
 
-    moose_input_types = 'MATERIAL     POSTPROCESSOR POSTPROCESSOR MATERIAL              MATERIAL'
-    moose_inputs = '     neml2_strain time          time          plastic_strain        equivalent_plastic_strain'
-    neml2_inputs = '     forces/E     forces/t      old_forces/t  old_state/internal/Ep old_state/internal/ep'
+    moose_input_types = 'MATERIAL     MATERIAL     POSTPROCESSOR POSTPROCESSOR MATERIAL     MATERIAL'
+    moose_inputs = '     neml2_strain neml2_strain time          time          neml2_stress equivalent_plastic_strain'
+    neml2_inputs = '     forces/E     old_forces/E forces/t      old_forces/t  old_state/S  old_state/internal/ep'
 
-    moose_output_types = 'MATERIAL     MATERIAL          MATERIAL'
-    moose_outputs = '     neml2_stress plastic_strain    equivalent_plastic_strain'
-    neml2_outputs = '     state/S      state/internal/Ep state/internal/ep'
+    moose_output_types = 'MATERIAL     MATERIAL'
+    moose_outputs = '     neml2_stress equivalent_plastic_strain'
+    neml2_outputs = '     state/S      state/internal/ep'
 
     moose_derivative_types = 'MATERIAL'
     moose_derivatives = 'neml2_jacobian'
     neml2_derivatives = 'state/S forces/E'
 
-    export_outputs = 'neml2_stress plastic_strain equivalent_plastic_strain'
-    export_output_targets = 'out; out; out'
+    export_outputs = 'neml2_stress equivalent_plastic_strain'
+    export_output_targets = 'out; out'
   []
 []
 
@@ -175,7 +179,7 @@ hard_mod= 1000
   [out]
     type = Exodus
     elemental_as_nodal = true
-    file_base = 'examples/data/tjoint_rate_indep_isoharden_out'
+    file_base = 'examples/data/ex1_tjoint_viscoplastic'
   []
 
 []
