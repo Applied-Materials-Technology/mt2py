@@ -22,7 +22,7 @@ Requires the MOOSE FE package here - https://github.com/idaholab/moose, GMsh - h
 
 
 ## Contributors
-- Rory Spencer ([fusmatrs](https://github.com/orgs/Computer-Aided-Validation-Laboratory/people/fusmatrs)), UK Atomic Energy Authority
+- Rory Spencer ([fusmatrs](https://github.com/fusmatrs)), UK Atomic Energy Authority
 - Rob Hamill
 
 ## License
