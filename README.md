@@ -1,5 +1,5 @@
 # mt2py
-![fig_pyvale_logo](docs\mt2py_logo.png)
+![fig_logo](docs/mt2py_logo.png)
 
 Materials Testing 2.0 with Python
 
