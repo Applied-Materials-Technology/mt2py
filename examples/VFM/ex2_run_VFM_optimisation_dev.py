@@ -4,10 +4,9 @@ import neml2
 from neml2 import LabeledAxisAccessor as LAA
 import time as timer
 from scipy import optimize
-from pyzag import nonlinear, chunktime
 from mt2py.reader.exodus import ExodusReader
-from neml2.tensors import Scalar, SR2, Tensor
 torch.set_default_dtype(torch.double)
+import copy
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -17,9 +16,11 @@ from mt2py.optimiser.scaling import scale_params, unscale_params
 from mt2py.virtualfields.stressreconstruction import calculate_stress_sensitivity,run_model,setup_model, generate_sensitivity_based_virtual_fields
 from mt2py.optimiser.parameters import Parameter, Group
 from mt2py.virtualfields import virtualfields
+from mt2py.virtualfields.costfunctions import calculate_virtual_work
+
 # Example 2
 # Performs a VFM optimisation using the FE strains from model ex2_circ
-   
+# This is the same as the existing example 2, but many of the classses have been moved into the package, making everything cleaner.
 
 tstart = timer.time()
 
@@ -54,7 +55,7 @@ p1 = Parameter('flow_rate_n','NEML2',2.*bump,True,(1,3))
 p2 = Parameter('isoharden_K','NEML2',1000.*bump,True,(500,1500))
 p3 = Parameter('yield_sy','NEML2',5.*bump,True,(2,10))
 g = Group([p0,p2,p1,p3])
-initial_g = g.copy()
+initial_g = copy.deepcopy(g)
 
 pyzag_model, solver, initial_state, forces = setup_model(Path('examples/neml2_models/viscoplasticity_isoharden.i')
                                                          ,dicdata
@@ -91,36 +92,10 @@ VFEtorch, VFUtorch = generate_sensitivity_based_virtual_fields(sensitivity,mesh,
 
 # Calulate the cost for the VFM optimisation, essentially internal work - external work
 # This approach calculates the internal and external work over time.
-def calc_cost_full(res,VFEtorch, VFUtorch):
-    thickness = 3
-    traction_edge=0
 
-    IVW_full = area*thickness*(VFEtorch*((res[:,:,[0,1,5]]*torch.tensor([1,1,1/np.sqrt(2)])[None,None,:])[:,:,:,None])).sum(dim=(1,2)).detach()
-
-    sorted,_=IVW_full.abs().sort(dim=0,descending=True)
-    num_avg = 5
-    alpha = sorted[:num_avg,:].mean(dim=0)
-
-    IVW = area*thickness*(VFEtorch*((res[:,:,[0,1,5]]*torch.tensor([1,1,1/np.sqrt(2)])[None,None,:])[:,:,:,None])).sum(dim=(1,2))
-    EVW = (VFUtorch[:,1,traction_edge,:]*torch.tensor(dicdata.force[:,None]*2))
-
-    if 1==0:
-        fig =plt.figure()
-        ax = fig.add_subplot()
-        for f in range(4):
-            ax.plot((IVW*1/alpha[None,:]).cpu().detach()[:,f])
-            ax.plot((EVW*1/alpha[None,:]).cpu().detach()[:,f])
-
-        fig.savefig('examples/VFM/cost_check.png')
-        plt.close()
-
-    internal_VW = (IVW/alpha[None,:]).sum(dim=1)
-    external_VW = (EVW/alpha[None,:]).sum(dim=1)
-
-    return internal_VW, external_VW
 
 # Calculate the objective/cost function.
-def objective(p,param_group,model,solver,initial_state,forces):
+def objective(p,param_group,model,solver,initial_state,forces,dicdata):
 
     pact,d_pact = unscale_params(p,
             lb,
@@ -131,10 +106,11 @@ def objective(p,param_group,model,solver,initial_state,forces):
     print(param_group)
 
     res = run_model(model,solver,initial_state,forces,param_group)
+    
+    #Calculate the virtual work
+    internal_VW, external_VW = calculate_virtual_work(res,VFEtorch,VFUtorch,dicdata.force,area,3.)
+
     #Calculate residual 
-
-    internal_VW, external_VW = calc_cost_full(res,VFEtorch,VFUtorch)
-
     residual = external_VW - internal_VW
     c= residual.pow(2).sum().sqrt()
     #c= residual.norm(p=2)
@@ -176,7 +152,7 @@ res = optimize.minimize(objective,
                         jac=True,
                         bounds = bounds,
                         options={'maxiter':10,'disp':True},
-                        args=(g,pyzag_model,solver,initial_state,forces)
+                        args=(g,pyzag_model,solver,initial_state,forces,dicdata)
                         )
 
 
