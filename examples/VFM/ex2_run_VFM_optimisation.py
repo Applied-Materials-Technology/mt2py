@@ -18,20 +18,37 @@ from mt2py.dicdata.dicdata import fe_spatialdata_to_dicdata, dice_to_dicdata
 from mt2py.optimiser.scaling import scale_params, unscale_params
 
 # Example 2
-# Performs a VFM optimisation to the data from ex0 and ex1.
-# May work?
+# Performs a VFM optimisation using the FE strains from model ex2_circ
 
-def stress_reconstruction(mask,strains,times,model,params):
+
+
+def stress_reconstruction(mask: np.ndarray,strains: SR2,times:torch.tensor,model:neml2.pyzag.NEML2PyzagModel,params:np.ndarray)->np.ndarray:
+    """Perform the stress reconstruction for a given set of parameters.
+    If given multiple sets of parameters then the input is batched such that only one solve is called. 
+
+    Args:
+        mask (np.ndarray): (n x m) Array with nans indicating areas where the specimen is not. 
+        strains (SR2): (t x p x 6) Mandel notation tensor containing the strains we want stresses for. p is the number of non-nans in mask
+        times (torch.tensor): (t x 1) Tensor of times.
+        model (neml2.pyzag.NEML2PyzagModel): NEML2 model loaded in with pyzag
+        params (np.ndarray): (j x k) Array of j sets of parameters to use for stress reconstruction. k should match the number and order of parameters in the model.
+
+    Returns:
+        np.ndarray: (t x n x m x 6 x k) Stresses corresponding to the times, strains and parameters input.
+    """
 
     nchunk = 1
-    # number of 'particles' i.e. parallel evaluations
+
+    # First, check if the parameters given are one set or multiple.
     if len(params.shape)>1:
         npart = params.shape[0]
     else:
         npart=1
 
     nstep,npoints,tmp = strains.shape
-    # Assemble  Model Inputs
+
+    # Assemble the Model Inputs
+    # If there are multiple sets of parameters then we append another copy of the strains for each set of parameters
     strainc  = strains.tile(1,npart,1)
     timec = times.tile(1,npart,1)
 
@@ -41,6 +58,7 @@ def stress_reconstruction(mask,strains,times,model,params):
 
     initial_statec = torch.zeros((npoints*npart, model.nstate))
 
+    # Set up the solver.
     solverc = nonlinear.RecursiveNonlinearEquationSolver(
         model,
         step_generator=nonlinear.StepGenerator(nchunk),
@@ -48,7 +66,8 @@ def stress_reconstruction(mask,strains,times,model,params):
         nonlinear_solver=chunktime.ChunkNewtonRaphson()
     )
        
-    #Update model parameters
+    # Update model parameters
+    # If there are multiple sets then the parameters in the model need to be repeated. 
     if len(params.shape)>1: # 2D params
         for ind,parameter in enumerate(model.parameter_names):
             #print(parameter)
@@ -58,18 +77,32 @@ def stress_reconstruction(mask,strains,times,model,params):
         for ind,parameter in enumerate(model.named_parameters()):
             parameter = torch.nn.parameter.Parameter(torch.tensor(params[ind]))
     model._update_parameter_values()
-    # Solve model, reshape and mask Nans
+
+    # Solve model
     with torch.no_grad():
         resc = nonlinear.solve_adjoint(solverc, initial_statec, nstep, forcesc)
-    #print(np.where(~np.isnan(res.cpu().detach().numpy())))
-    #mask = ~np.isnan(dicdata.x)
+
+    # Reshape the output and apply mask.
     out_stress = np.ones((nstep,)+mask.shape+(6,npart))*np.nan
-    #print(out_stress[:,mask,:,:].shape)
+
     out_stress[:,mask,:,:] = resc.cpu().detach().numpy().reshape(nstep,npoints,npart,7,order='F').swapaxes(-2,-1)[:,:,:6,:]
-    
     return out_stress
 
-def calculate_stress_sensitivity(mask,strains,times,model,params,pert=0.85, incremental=True):
+def calculate_stress_sensitivity(mask: np.ndarray,strains: SR2,times:torch.tensor,model:neml2.pyzag.NEML2PyzagModel,params:np.ndarray,pert=0.85, incremental=True)->np.ndarray:
+    """ Calculate the stress sensitivity for a given set of strains and parameters.
+
+    Args:
+        mask (np.ndarray): (n x m) Array with nans indicating areas where the specimen is not. 
+        strains (SR2): (t x p x 6) Mandel notation tensor containing the strains we want stresses for. p is the number of non-nans in mask
+        times (torch.tensor): (t x 1) Tensor of times.
+        model (neml2.pyzag.NEML2PyzagModel): NEML2 model loaded in with pyzag
+        params (np.ndarray): (k) Array of parameters to use for sensitivity calculation. k should match the number and order of parameters in the model.
+        pert (float, optional): Amount to perterb each value by for the sensitivity calculation. Defaults to 0.85.
+        incremental (bool, optional): Flag for incremental or total sensitivity. Defaults to True.
+
+    Returns:
+        np.ndarray: (t x n x m x 6 x k) Stress sensitivities corresponding to the times, strains and parameters input.
+    """
     # Generate perturbated values
     n = len(params)+1
     nstep = len(times)

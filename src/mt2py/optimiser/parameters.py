@@ -18,7 +18,7 @@ class Parameter():
         """
         self.name = name
         self.source = source
-        self.value = value
+        self.value = float(value) # forcing float, causes problems with optimisation later if accidentally int
         self.opt_flag = opt_flag
         self.bounds = bounds
 
@@ -50,9 +50,10 @@ class Group():
             temp_names.append(parameter.name+parameter.source)
             if parameter.opt_flag:
                 self.opt_parameters.append(parameter)
-
+        self.opt_parameter_names = [p.name for p in self.opt_parameters]
         self.id = id
         self.n_var = len(self.opt_parameters)
+        
         
         #Check for duplicate names, not allowed
         if len(temp_names) != len(set(temp_names)):
@@ -100,3 +101,9 @@ class Group():
     def report(self):
         # generate a machine readable string of the parameters
         pass
+
+    def get_bounds(self):
+        bounds= []
+        for p in self.opt_parameters:
+            bounds.append(p.bounds)
+        return bounds
