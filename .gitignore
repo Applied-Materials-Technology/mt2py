@@ -146,4 +146,4 @@ examples/outputs
 examples/data
 
 sloth-opt
-*.png
+examples/*.png
