@@ -112,7 +112,7 @@ def calculate_stress_sensitivity(param_group: Group
     # Reshape the output and apply mask.
     out_stress = np.ones((nstep,)+mask.shape+(6,npart))*np.nan
 
-    out_stress[:,mask,:,:] = resc.cpu().detach().numpy().reshape(nstep,npoints,npart,7,order='F').swapaxes(-2,-1)[:,:,:6,:]
+    out_stress[:,mask,:,:] = resc.cpu().detach().numpy().reshape(nstep,npoints,npart,resc.shape[-1],order='F').swapaxes(-2,-1)[:,:,:6,:]
     
     sensitivity = np.empty((nstep,mask.shape[0],mask.shape[1],6,param_group.n_var))
     for i in range(1,param_group.n_var+1):
