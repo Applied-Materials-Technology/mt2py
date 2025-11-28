@@ -53,4 +53,4 @@ F. Pierron, Strain 2023, 59(3), e12434. https://doi.org/10.1111/str.12434 \
 <a id="3">[3]</a> 
 Grédiac, M., Pierron, F., Avril, S. and Toussaint, E. (2006), The Virtual Fields Method for Extracting Constitutive Parameters From Full-Field Measurements: a Review. Strain, 42: 233-253. https://doi.org/10.1111/j.1475-1305.2006.tb01504.x \
 <a id="4">[4]</a> 
-Marek A, Davis FM, Pierron F. Sensitivity-based virtual fields for the non-linear virtual fields method. Comput Mech. 2017;60(3):409-431. doi: 10.1007/s00466-017-1411-6. Epub 2017 Apr 28. PMID: 32009700; PMCID: PMC6961464. \
+Marek A, Davis FM, Pierron F. Sensitivity-based virtual fields for the non-linear virtual fields method. Comput Mech. 2017;60(3):409-431. https://doi.org/10.1007/s00466-017-1411-6 
