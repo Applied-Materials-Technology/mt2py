@@ -283,9 +283,9 @@ def interpolate_to_dicdata(fesurf:FEDataSurface,spacing=0.16,exclude_limit=20)->
     dicdata.time = fesurf.time
     dicdata.nstep = fesurf.nstep
     dicdata.force = fesurf.force
-    dicdata.x = fesurf.x
-    dicdata.y = fesurf.y
-    dicdata.z = fesurf.z
+    dicdata.x = x
+    dicdata.y = y
+    dicdata.z = zr
     
     if fesurf.u is not None:
         dicdata.u = interpolate_variable(fesurf.u,tri,x,y,zp)
