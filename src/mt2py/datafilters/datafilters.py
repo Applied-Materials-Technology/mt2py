@@ -174,7 +174,7 @@ class FastFilter(DataFilterBase):
         return result, u_int, v_int, w_int
         
     @staticmethod
-    def interpolate_to_grid_generic(fe_data : SpatialData,spacing : float, exclude_limit: float):
+    def interpolate_to_grid_generic(fe_data : SpatialData,spacing : float, exclude_limit: float, mode='nearest'):
         """Interpolate the FE data onto a regular grid with spacing.
 
         Args:
@@ -207,7 +207,10 @@ class FastFilter(DataFilterBase):
             for i in range(fe_data.n_steps):
                 for j in range(n_comp):
                     zd = fe_data.data_fields[field].data[:,j,i]
-                    dat_int[:,:,i,j] = interpolate.LinearNDInterpolator(tri,np.r_[zd,zp])(x,y)
+                    if mode == 'linear':
+                        dat_int[:,:,i,j] = interpolate.LinearNDInterpolator(tri,np.r_[zd,zp])(x,y)
+                    if mode == 'nearest':
+                        dat_int[:,:,i,j] = interpolate.NearestNDInterpolator(tri,np.r_[zd,zp])(x,y)
             data_dict[field] = dat_int
         
         # Create pyvista mesh 

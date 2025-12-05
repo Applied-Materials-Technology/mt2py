@@ -6,7 +6,7 @@ import pyvista as pv
 from mt2py.dicdata.dicdata import DICData
 from mt2py.datafilters.datafilters import FastFilter
 from dataclasses import dataclass
-from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.spatial import Delaunay
 
 @dataclass
@@ -259,7 +259,7 @@ def get_fe_surface(input_file:Path,bounding_box:tuple[tuple,tuple,tuple],mode='N
 
 
 
-def interpolate_to_dicdata(fesurf:FEDataSurface,spacing=0.16,exclude_limit=20)->DICData:
+def interpolate_to_dicdata(fesurf:FEDataSurface,spacing=0.16,exclude_limit=20,mode='nearest')->DICData:
     
     # Assemble the regular grid
     xr = np.linspace(np.min(fesurf.x),np.max(fesurf.x),int((np.max(fesurf.x)-np.min(fesurf.x))/spacing))
@@ -276,7 +276,10 @@ def interpolate_to_dicdata(fesurf:FEDataSurface,spacing=0.16,exclude_limit=20)->
     def interpolate_variable(variable,tri,x,y,zp):
         var_int = np.zeros((fesurf.nstep,)+x.shape)
         for t in range(fesurf.nstep):
-            var_int[t,:,:] = LinearNDInterpolator(tri,np.r_[variable[t,:],zp])(x,y)
+            if mode =='linear':
+                var_int[t,:,:] = LinearNDInterpolator(tri,np.r_[variable[t,:],zp])(x,y)
+            if mode == 'nearest':
+                var_int[t,:,:] = NearestNDInterpolator(tri,np.r_[variable[t,:],zp])(x,y)
         return var_int
     
     dicdata = FEDataSurface('MOOSE')
