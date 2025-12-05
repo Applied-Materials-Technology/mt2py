@@ -7,7 +7,7 @@ import pandas as pd
 from mt2py.utils.matchidutils import read_matchid_coords
 from mt2py.spatialdata.importmatchid import read_matchid_csv
 from mt2py.spatialdata.importmatchid import field_lookup
-#from mt2py.datafilters.datafilters import FastFilter
+from mt2py.datafilters.datafilters import FastFilter
 from mt2py.spatialdata.spatialdata import SpatialData
 from mt2py.reader.exodus import ExodusReader
 import pyvista as pv
@@ -395,13 +395,13 @@ def matchid_csv_to_dicdata(folder_path: Path,load_filename: Path,fields=['u','v'
     return data
 
 
-def fe_spatialdata_to_dicdata_lin(fe_spatialdata,grid_spacing,exclude_limit=30):
+def fe_spatialdata_to_dicdata_lin(fe_spatialdata,grid_spacing,exclude_limit=30,mode='nearest'):
     """ #Take FE data already in a spatialdata format, interpolate
     #to a grid of spacing grid_spacing and convert to dicdata format. 
     #Initially the strains will be interpolated strains.
     """
 
-    x,y,data_dict_alt = FastFilter.interpolate_to_grid_generic(fe_spatialdata,grid_spacing,exclude_limit)
+    x,y,data_dict_alt = FastFilter.interpolate_to_grid_generic(fe_spatialdata,grid_spacing,exclude_limit,mode)
     
     data = DICData('MOOSE')
     data.strain_tensor = 'small'
@@ -427,7 +427,7 @@ def fe_spatialdata_to_dicdata_lin(fe_spatialdata,grid_spacing,exclude_limit=30):
     return data, data_dict_alt
 
 
-def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2)->DICData:
+def fe_spatialdata_to_dicdata(fe_data:SpatialData,grid_spacing:float = 0.2,mode='nearest')->DICData:
     """Use pyvista (and mesh shape functions) to interpolate FE data
     already in spatialdata format to a regular grid and create a 
     dicdata object.
