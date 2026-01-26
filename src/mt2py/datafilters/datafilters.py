@@ -22,9 +22,9 @@ import pyvista as pv
 
 from mt2py.reader.exodus import ExodusReader
 
-from pyvale.imagesim.imagedefopts import ImageDefOpts
-from pyvale.imagesim.cameradata import CameraData
-import pyvale.imagesim.imagedef as sid
+#from pyvale.imagesim.imagedefopts import ImageDefOpts Need to fix with latest version of pyvale
+#from pyvale.imagesim.cameradata import CameraData
+#import pyvale.imagesim.imagedef as sid
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 import subprocess
@@ -661,185 +661,185 @@ class DiceManager:
 
         return results_path
 
-class DiceFilter(DataFilterBase):
+# class DiceFilter(DataFilterBase):
 
-    def __init__(self,
-                 base_image_path: Path,
-                 image_def_opts: ImageDefOpts,
-                 camera_opts:CameraData,
-                 dice_opts: DiceOpts,
-                 time_steps: list[int])-> None:
+#     def __init__(self,
+#                  base_image_path: Path,
+#                  image_def_opts: ImageDefOpts,
+#                  camera_opts:CameraData,
+#                  dice_opts: DiceOpts,
+#                  time_steps: list[int])-> None:
         
-        self.base_image_path = base_image_path
-        self.image_def_opts = image_def_opts
-        self.camera_opts = camera_opts
-        self.dic_opts = dice_opts
-        self.time_steps = time_steps
+#         self.base_image_path = base_image_path
+#         self.image_def_opts = image_def_opts
+#         self.camera_opts = camera_opts
+#         self.dic_opts = dice_opts
+#         self.time_steps = time_steps
 
-        self.dice_manager = DiceManager(dice_opts)
+#         self.dice_manager = DiceManager(dice_opts)
 
-        # Configure everything
-        self.step_size = self.dice_manager.read_step_size()
-        self.image_mask = None
+#         # Configure everything
+#         self.step_size = self.dice_manager.read_step_size()
+#         self.image_mask = None
     
-    def create_roi_polygon(self,image_mask : NDArray[bool],spacing=20,step_size=10) -> NDArray[np.float64]:
-        """ Creates coordinates in pixel space for masking out the ROI in DICe
-        Applys a border of 1 step size + 1px for limit edge subsets.
-        Only works for solid (no-hole) designs.
+#     def create_roi_polygon(self,image_mask : NDArray[bool],spacing=20,step_size=10) -> NDArray[np.float64]:
+#         """ Creates coordinates in pixel space for masking out the ROI in DICe
+#         Applys a border of 1 step size + 1px for limit edge subsets.
+#         Only works for solid (no-hole) designs.
 
-        Args:
-            image_mask (NDArray[np.bool]): Boolean image mask from image deformation
-            spacing (int, optional): Spacing used when stepping over the mask. Default is 20.
-            step_size (int, optional): Step size used in DICE. Defaults to 10.
+#         Args:
+#             image_mask (NDArray[np.bool]): Boolean image mask from image deformation
+#             spacing (int, optional): Spacing used when stepping over the mask. Default is 20.
+#             step_size (int, optional): Step size used in DICE. Defaults to 10.
 
-        Returns:
-            NDArray[np.float64]: x and y coordinates defining a polygon ROI. Ordered
-            such that they form a path around the ROI.
-        """   
-        border_size = step_size + 1
-        y = []
-        x_min = []
-        x_max = []
-        # Iterate down image and find the edges
-        # Note only works for non-holed specimens for now 
-        for j in range(0,image_mask.shape[0],spacing):
-            edge = np.where(image_mask[j,:]==1)
-            try: 
-                x_min.append(edge[0][0]+border_size)
-                x_max.append(edge[0][-1]-border_size)
-                y.append(j)
-            except IndexError:
-                continue
+#         Returns:
+#             NDArray[np.float64]: x and y coordinates defining a polygon ROI. Ordered
+#             such that they form a path around the ROI.
+#         """   
+#         border_size = step_size + 1
+#         y = []
+#         x_min = []
+#         x_max = []
+#         # Iterate down image and find the edges
+#         # Note only works for non-holed specimens for now 
+#         for j in range(0,image_mask.shape[0],spacing):
+#             edge = np.where(image_mask[j,:]==1)
+#             try: 
+#                 x_min.append(edge[0][0]+border_size)
+#                 x_max.append(edge[0][-1]-border_size)
+#                 y.append(j)
+#             except IndexError:
+#                 continue
 
-        y_roi = np.concatenate((np.flip(np.array(y)),np.array(y)))
-        x_roi = np.concatenate((np.array(x_min),np.flip(np.array(x_max))))
-        return x_roi, y_roi
+#         y_roi = np.concatenate((np.flip(np.array(y)),np.array(y)))
+#         x_roi = np.concatenate((np.array(x_min),np.flip(np.array(x_max))))
+#         return x_roi, y_roi
     
 
-    def preprocess_images(self,fedata: SpatialData,time_steps:list[int]):
+#     def preprocess_images(self,fedata: SpatialData,time_steps:list[int]):
         
-        # Check if the image mask already exists
+#         # Check if the image mask already exists
 
-        coords = np.array(fedata.mesh_data.points)
+#         coords = np.array(fedata.mesh_data.points)
 
-        #self.camera_opts.m_per_px = sid.calc_res_from_nodes(self.camera_opts,coords, #type: ignore
-        #                                    self.image_def_opts.calc_res_border_px)
+#         #self.camera_opts.m_per_px = sid.calc_res_from_nodes(self.camera_opts,coords, #type: ignore
+#         #                                    self.image_def_opts.calc_res_border_px)
 
-        #self.camera_opts.m_per_px = 1.3e-5
-        # Default ROI is the whole FOV but we want to set this to be based on the
-        # furthest nodes, this is set in FE units 'meters' and does not change FOV
-        self.camera_opts.roi_len = sid.calc_roi_from_nodes(self.camera_opts,coords)[0]
+#         #self.camera_opts.m_per_px = 1.3e-5
+#         # Default ROI is the whole FOV but we want to set this to be based on the
+#         # furthest nodes, this is set in FE units 'meters' and does not change FOV
+#         self.camera_opts.roi_len = sid.calc_roi_from_nodes(self.camera_opts,coords)[0]
 
-        self.camera_opts._roi_loc[0] = (self.camera_opts._fov[0] - self.camera_opts._roi_len[0])/2 -np.min(coords[:,0])
-        self.camera_opts._roi_loc[1] = (self.camera_opts._fov[1] - self.camera_opts._roi_len[1])/2 -np.min(coords[:,1])
-        #self.camera_opts.coord_offset =np.min(coords,axis=0)[:2] 
-        #self.camera_opts._cent_roi()
+#         self.camera_opts._roi_loc[0] = (self.camera_opts._fov[0] - self.camera_opts._roi_len[0])/2 -np.min(coords[:,0])
+#         self.camera_opts._roi_loc[1] = (self.camera_opts._fov[1] - self.camera_opts._roi_len[1])/2 -np.min(coords[:,1])
+#         #self.camera_opts.coord_offset =np.min(coords,axis=0)[:2] 
+#         #self.camera_opts._cent_roi()
 
-        disp_x = fedata.data_fields['displacement'].data[:,0,time_steps]
-        disp_y = fedata.data_fields['displacement'].data[:,1,time_steps]
+#         disp_x = fedata.data_fields['displacement'].data[:,0,time_steps]
+#         disp_y = fedata.data_fields['displacement'].data[:,1,time_steps]
 
-        input_im = sid.load_image(self.base_image_path)
+#         input_im = sid.load_image(self.base_image_path)
 
-        if self.image_mask is None: # If it doesn't run the preprocessing
-            self.mesh_template = fedata.mesh_data
+#         if self.image_mask is None: # If it doesn't run the preprocessing
+#             self.mesh_template = fedata.mesh_data
             
-            (self.upsampled_image,
-            self.image_mask,
-            self.input_im,
-            disp_x,
-            disp_y) = sid.preprocess(input_im,
-                                    coords,
-                                    disp_x,
-                                    disp_y,
-                                    self.camera_opts,
-                                    self.image_def_opts,
-                                    print_on = True)
+#             (self.upsampled_image,
+#             self.image_mask,
+#             self.input_im,
+#             disp_x,
+#             disp_y) = sid.preprocess(input_im,
+#                                     coords,
+#                                     disp_x,
+#                                     disp_y,
+#                                     self.camera_opts,
+#                                     self.image_def_opts,
+#                                     print_on = True)
             
-        else: # There's an existing mask
-            if self.mesh_template == fedata.mesh_data: # Did it come from the same mesh?
-                # Code from image def 
-                print('Retaining existing image mask')
-                if disp_x.ndim == 1:
-                    disp_x = np.atleast_2d(disp_x).T
-                if disp_y.ndim == 1:
-                    disp_y = np.atleast_2d(disp_y).T
+#         else: # There's an existing mask
+#             if self.mesh_template == fedata.mesh_data: # Did it come from the same mesh?
+#                 # Code from image def 
+#                 print('Retaining existing image mask')
+#                 if disp_x.ndim == 1:
+#                     disp_x = np.atleast_2d(disp_x).T
+#                 if disp_y.ndim == 1:
+#                     disp_y = np.atleast_2d(disp_y).T
 
-            else: # It's not the same mesh
-                # Update the template
-                self.mesh_template = fedata.mesh_data
+#             else: # It's not the same mesh
+#                 # Update the template
+#                 self.mesh_template = fedata.mesh_data
                 
-                (self.upsampled_image,
-                self.image_mask,
-                self.input_im,
-                disp_x,
-                disp_y) = sid.preprocess(input_im,
-                                        coords,
-                                        disp_x,
-                                        disp_y,
-                                        self.camera_opts,
-                                        self.image_def_opts,
-                                        print_on = True)
+#                 (self.upsampled_image,
+#                 self.image_mask,
+#                 self.input_im,
+#                 disp_x,
+#                 disp_y) = sid.preprocess(input_im,
+#                                         coords,
+#                                         disp_x,
+#                                         disp_y,
+#                                         self.camera_opts,
+#                                         self.image_def_opts,
+#                                         print_on = True)
                 
-        return coords, disp_x, disp_y
+#         return coords, disp_x, disp_y
                 
-    def run_filter(self,fedata: SpatialData, noise_level=None):
+#     def run_filter(self,fedata: SpatialData, noise_level=None):
 
-        # Do some image deformation
-        coords, disp_x, disp_y = self.preprocess_images(fedata,self.time_steps)
+#         # Do some image deformation
+#         coords, disp_x, disp_y = self.preprocess_images(fedata,self.time_steps)
         
-        print_on = True
-        if print_on:
-            print('\n'+'='*80)
-            print('DEFORMING IMAGES')
+#         print_on = True
+#         if print_on:
+#             print('\n'+'='*80)
+#             print('DEFORMING IMAGES')
 
-        num_frames = disp_x.shape[1]
-        ticl = time.perf_counter()
+#         num_frames = disp_x.shape[1]
+#         ticl = time.perf_counter()
 
-        for ff in range(num_frames):
-            if print_on:
-                ticf = time.perf_counter()
-                print(f'\nDEFORMING FRAME: {ff}')
+#         for ff in range(num_frames):
+#             if print_on:
+#                 ticf = time.perf_counter()
+#                 print(f'\nDEFORMING FRAME: {ff}')
 
-            (def_image,_,_,_,_) = sid.deform_one_image(self.upsampled_image,
-                                                self.camera_opts,
-                                                self.image_def_opts,
-                                                coords, # type: ignore
-                                                np.array((disp_x[:,ff],disp_y[:,ff])).T,
-                                                image_mask=self.image_mask,
-                                                print_on=print_on)
+#             (def_image,_,_,_,_) = sid.deform_one_image(self.upsampled_image,
+#                                                 self.camera_opts,
+#                                                 self.image_def_opts,
+#                                                 coords, # type: ignore
+#                                                 np.array((disp_x[:,ff],disp_y[:,ff])).T,
+#                                                 image_mask=self.image_mask,
+#                                                 print_on=print_on)
             
-            if noise_level is not None:
-                #image_noise = np.random.normal(0,noise_level,def_image.shape)
-                #def_image = def_image + image_noise
-                image_noise = heteroscedastic_noise(def_image,noise_level)
-                def_image = def_image + image_noise
+#             if noise_level is not None:
+#                 #image_noise = np.random.normal(0,noise_level,def_image.shape)
+#                 #def_image = def_image + image_noise
+#                 image_noise = heteroscedastic_noise(def_image,noise_level)
+#                 def_image = def_image + image_noise
 
-            save_file = self.image_def_opts.save_path / str(f'{self.image_def_opts.save_tag}_'+
-                    f'{sid.get_image_num_str(im_num=ff,width=4)}'+
-                    '.tiff')
-            sid.save_image(save_file,def_image,self.camera_opts.bits)
+#             save_file = self.image_def_opts.save_path / str(f'{self.image_def_opts.save_tag}_'+
+#                     f'{sid.get_image_num_str(im_num=ff,width=4)}'+
+#                     '.tiff')
+#             sid.save_image(save_file,def_image,self.camera_opts.bits)
 
-            if print_on:
-                tocf = time.perf_counter()
-                print(f'DEFORMING FRAME: {ff} took {tocf-ticf:.4f} seconds')
+#             if print_on:
+#                 tocf = time.perf_counter()
+#                 print(f'DEFORMING FRAME: {ff} took {tocf-ticf:.4f} seconds')
 
-        if print_on:
-            tocl = time.perf_counter()
-            print('\n'+'-'*50)
-            print(f'Deforming all images took {tocl-ticl:.4f} seconds')
-            print('-'*50)
+#         if print_on:
+#             tocl = time.perf_counter()
+#             print('\n'+'-'*50)
+#             print(f'Deforming all images took {tocl-ticl:.4f} seconds')
+#             print('-'*50)
 
-            print('\n'+'='*80)
-            print('COMPLETE\n')
+#             print('\n'+'='*80)
+#             print('COMPLETE\n')
 
-        x_roi, y_roi = self.create_roi_polygon(self.image_mask,step_size=self.step_size)
-        self.dice_manager.update_input_file()
-        self.dice_manager.write_subsets_file(x_roi,y_roi)
-        result_file = self.dice_manager.run() 
-        exodus_reader = ExodusReader(result_file)
-        all_sim_data = exodus_reader.read_all_sim_data()
-        filtered_data = simdata_dice_to_spatialdata(all_sim_data,self.camera_opts.m_per_px,self.camera_opts.roi_loc)
-        return filtered_data
+#         x_roi, y_roi = self.create_roi_polygon(self.image_mask,step_size=self.step_size)
+#         self.dice_manager.update_input_file()
+#         self.dice_manager.write_subsets_file(x_roi,y_roi)
+#         result_file = self.dice_manager.run() 
+#         exodus_reader = ExodusReader(result_file)
+#         all_sim_data = exodus_reader.read_all_sim_data()
+#         filtered_data = simdata_dice_to_spatialdata(all_sim_data,self.camera_opts.m_per_px,self.camera_opts.roi_loc)
+#         return filtered_data
     
 
 
