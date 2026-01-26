@@ -14,13 +14,17 @@ def rot90(dicdata: DICData):
      
     rotdata = copy(dicdata)
 
+    z_flag = dicdata.z is not None
+
     rotdata.x = -dicdata.y.T
     rotdata.y = dicdata.x.T
-    rotdata.z = dicdata.z.T
+    if z_flag:
+        rotdata.z = dicdata.z.T
 
     rotdata.u = -dicdata.v.swapaxes(1,2)
     rotdata.v = dicdata.u.swapaxes(1,2)
-    rotdata.w = -dicdata.w.swapaxes(1,2)
+    if z_flag:
+        rotdata.w = -dicdata.w.swapaxes(1,2)
 
     rotdata.mask = dicdata.mask.T
 

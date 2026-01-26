@@ -112,7 +112,7 @@ class DICData:
 
 
 
-def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False,indices=None):
+def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False,indices=None,force_col='Force',time_col='Time'):
     """Import MatchID data from HDF5 to DICData format
 
     Args:
@@ -134,8 +134,8 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     
     # Global Data
-    force = f['DIC Data/Temporal Data/Force'][()].squeeze()
-    time = f['DIC Data/Temporal Data/Time'][()].squeeze()
+    force = f['DIC Data/Temporal Data/{}'.format(force_col)][()].squeeze()
+    time = f['DIC Data/Temporal Data/{}'.format(time_col)][()].squeeze()
 
     nstep = len(force)
 
@@ -168,20 +168,26 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     x = np.zeros_like(xp)*np.nan
     y = np.zeros_like(xp)*np.nan
     z = np.zeros_like(xp)*np.nan
+
+    #Check if Z is there
+    z_flag = 'Z' in list(f['DIC Data/Point Data'].keys())
     
     if 'Corrected U' in f['DIC Data/Point Data'].keys():
         #Use rigid body corrected data
         x[filt] = f['DIC Data/Point Data/Corrected X'][0,:]
         y[filt] = f['DIC Data/Point Data/Corrected Y'][0,:]
-        z[filt] = f['DIC Data/Point Data/Corrected Z'][0,:]
+        if z_flag:
+            z[filt] = f['DIC Data/Point Data/Corrected Z'][0,:]
     else:
         x[filt] = f['DIC Data/Point Data/X'][0,:]
         y[filt] = f['DIC Data/Point Data/Y'][0,:]
-        z[filt] = f['DIC Data/Point Data/Z'][0,:]
+        if z_flag:
+            z[filt] = f['DIC Data/Point Data/Z'][0,:]
 
     data.x = x
     data.y = y
-    data.z = z
+    if z_flag:
+        data.z = z
 
     # Displacments
     u = np.zeros((nstep,) + xp.shape)*np.nan
@@ -191,25 +197,35 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
     if 'Corrected U' in f['DIC Data/Point Data'].keys():
         u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Corrected U'][()][indices,...]
         v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Corrected V'][()][indices,...]
-        w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Corrected W'][()][indices,...]
+        if z_flag:
+            w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Corrected W'][()][indices,...]
 
     else:
         u[:,filt[0],filt[1]] = f['DIC Data/Point Data/Horizontal Displacement U'][()][indices,...]
         v[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Vertical Displacement V'][()][indices,...]
-        w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()][indices,...]
+        if z_flag:
+            w[:,filt[0],filt[1]] = -f['DIC Data/Point Data/Out-Of-Plane: W'][()][indices,...]
     
     data.u = u
     data.v = v
-    data.w = w    
+    if z_flag:
+        data.w = w    
 
     # Strains, keeping as individual components for now
     exx = np.zeros((nstep,) + xp.shape)*np.nan       
     exy = np.zeros((nstep,) + xp.shape)*np.nan      
     eyy = np.zeros((nstep,) + xp.shape)*np.nan 
 
-    exx[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exx'][()][indices,...]
-    eyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Eyy'][()][indices,...]
-    exy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exy'][()][indices,...]
+    if 'Strain-global frame: Exx' in list(f['DIC Data/Point Data'].keys()):
+        exx[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exx'][()][indices,...]
+        eyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Eyy'][()][indices,...]
+        exy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-global frame: Exy'][()][indices,...]
+
+    else:
+        exx[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-local frame: Exx'][()][indices,...]
+        eyy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-local frame: Eyy'][()][indices,...]
+        exy[:,filt[0],filt[1]] = f['DIC Data/Point Data/Strain-local frame: Exy'][()][indices,...]
+
     
     data.exx = exx
     data.eyy = eyy
@@ -248,20 +264,21 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
         data.Fzz = Fzz
 
     # Data quality
-    epipolar_distance = np.zeros((nstep,) + xp.shape)*np.nan 
-    epipolar_distance[:,filt[0],filt[1]] = f['DIC Data/Point Data/Epipolar Distance'][()][indices,...]
-    
-    data.epipolar_distance = epipolar_distance
+    if z_flag:
+        epipolar_distance = np.zeros((nstep,) + xp.shape)*np.nan 
+        epipolar_distance[:,filt[0],filt[1]] = f['DIC Data/Point Data/Epipolar Distance'][()][indices,...]
+        
+        data.epipolar_distance = epipolar_distance
 
-    correlation_2D = np.zeros((nstep,) + xp.shape)*np.nan 
-    correlation_2D[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value 2D'][()][indices,...]
-    
-    data.correlation_2D = correlation_2D
+        correlation_2D = np.zeros((nstep,) + xp.shape)*np.nan 
+        correlation_2D[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value 2D'][()][indices,...]
+        
+        data.correlation_2D = correlation_2D
 
-    correlation_persp = np.zeros((nstep,) + xp.shape)*np.nan 
-    correlation_persp[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value Persp'][()][indices,...]
-    
-    data.correlation_persp = correlation_persp
+        correlation_persp = np.zeros((nstep,) + xp.shape)*np.nan 
+        correlation_persp[:,filt[0],filt[1]] = f['DIC Data/Point Data/Correlation Value Persp'][()][indices,...]
+        
+        data.correlation_persp = correlation_persp
 
     return data
 
