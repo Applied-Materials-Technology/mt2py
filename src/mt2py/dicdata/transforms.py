@@ -56,8 +56,7 @@ def get_by_bounding_box(dicdata: DICData,bounding_box:tuple[tuple,tuple,tuple])-
 
     filter =yfilt.reshape((-1,1))@xfilt.reshape((-1,1)).T
     #Need to get shape of Trues in filter
-    plt.imshow(filter)
-    #plt.imshow(xfilt@yfilt.T)
+
     #print(np.max(np.where(filter)[0]))
     y_size = 1+np.max(np.where(filter)[0])-np.min(np.where(filter)[0])
     x_size = 1+np.max(np.where(filter)[1])-np.min(np.where(filter)[1])
