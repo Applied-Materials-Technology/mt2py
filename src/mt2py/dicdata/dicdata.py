@@ -112,7 +112,7 @@ class DICData:
 
 
 
-def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False,indices=None,force_col='Force',time_col='Time'):
+def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Almansi',def_grad =False,indices=None,force_col='Force',time_col='Time',extras=False):
     """Import MatchID data from HDF5 to DICData format
 
     Args:
@@ -264,7 +264,7 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
         data.Fzz = Fzz
 
     # Data quality
-    if z_flag:
+    if z_flag and extras:
         epipolar_distance = np.zeros((nstep,) + xp.shape)*np.nan 
         epipolar_distance[:,filt[0],filt[1]] = f['DIC Data/Point Data/Epipolar Distance'][()][indices,...]
         
