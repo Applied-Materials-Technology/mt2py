@@ -46,15 +46,18 @@ def get_by_bounding_box(dicdata: DICData,bounding_box:tuple[tuple,tuple,tuple])-
         DICData: _description_
     """
    
-
     z_flag = dicdata.z is not None
 
-    if z_flag:
-        filter = (dicdata.x > bounding_box[0][0])*(dicdata.x < bounding_box[0][1])*(dicdata.y > bounding_box[1][0])*(dicdata.y < bounding_box[1][1])*(dicdata.z > bounding_box[2][0])*(dicdata.z < bounding_box[2][1])
-    else:
-        filter = (dicdata.x > bounding_box[0][0])*(dicdata.x < bounding_box[0][1])*(dicdata.y > bounding_box[1][0])*(dicdata.y < bounding_box[1][1])
+    xcoords = np.nanmean(dicdata.x,axis=0)
+    ycoords = np.nanmean(dicdata.y,axis=1)
 
+    xfilt = (xcoords > bounding_box[0][0])*(xcoords < bounding_box[0][1])
+    yfilt = (ycoords > bounding_box[1][0])*(ycoords < bounding_box[1][1])
+
+    filter =yfilt.reshape((-1,1))@xfilt.reshape((-1,1)).T
     #Need to get shape of Trues in filter
+    plt.imshow(filter)
+    #plt.imshow(xfilt@yfilt.T)
     #print(np.max(np.where(filter)[0]))
     y_size = 1+np.max(np.where(filter)[0])-np.min(np.where(filter)[0])
     x_size = 1+np.max(np.where(filter)[1])-np.min(np.where(filter)[1])
