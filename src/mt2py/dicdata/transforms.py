@@ -1,4 +1,5 @@
 from mt2py.dicdata.dicdata import DICData
+import numpy as np
 from copy import copy
 
 
