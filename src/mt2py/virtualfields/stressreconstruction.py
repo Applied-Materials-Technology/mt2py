@@ -168,7 +168,7 @@ def generate_sensitivity_based_virtual_fields(sensitivity: np.ndarray
     for p in range(sensitivity.shape[4]):
         # note 0, 1, 5 is to take the xx yy and xy components from mandel notation
         refmap = np.moveaxis(sensitivity[...,p][:,...,[0,1,5]],0,-1)
-        VF, VU = virtualfields.sensitivity_vfs(refmap, mesh, options)
+        VF, VU = virtualfields.sensitivity_vfs(refmap, virtual_mesh, options)
         VFs.append(VF)
 
     # Convert the fields to torch tensors.
