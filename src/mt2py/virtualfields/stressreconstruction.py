@@ -1,5 +1,5 @@
 from pathlib import Path
-from pyvfm.virtualfields import virtualfields
+from mt2py.virtualfields import virtualfields
 import torch
 import neml2
 from neml2 import LabeledAxisAccessor as LAA
@@ -41,11 +41,12 @@ def parameter_check(param_group:Group,pyzag_model:neml2.pyzag.NEML2PyzagModel)->
 
 def calculate_stress_sensitivity(param_group: Group
                                  ,model:neml2.pyzag.NEML2PyzagModel
-                                 ,strains: SR2
-                                 ,times: torch.tensor
+                                 ,forces: torch.tensor
                                  ,mask: np.ndarray
                                  ,perturbation=0.85
-                                 ,incremental=True) -> np.ndarray:
+                                 ,incremental=True
+                                 ,temperature=None
+                                 ,initial_conditions=None) -> np.ndarray:
     """Calculate the stress sensitivity for a given set of parameters, 
     model, strains and times.
 
@@ -78,17 +79,36 @@ def calculate_stress_sensitivity(param_group: Group
     # The different perturbed parameter sets will all be batched together and solved once
     nchunk = 1
     npart = sens_params.shape[0]
+
+    I = model.forces_asm.split_by_variable(Tensor(forces,1))
+    strains = I['forces/E'].torch()
+    times = I['forces/t'].torch()
     nstep,npoints,tmp = strains.shape
     
     # Assemble inputs 
     strainc  = strains.tile(1,npart,1)
     timec = times.tile(1,npart,1)
 
-    # Prescribed forces
-    forcesc = model.forces_asm.assemble_by_variable(
-        {"forces/t": timec, "forces/E": strainc}).torch()
+    # THere's a more elegant way to do this by iterating over the input axis, but not for now
+    if temperature is None:
+        # Prescribed forces
+        forcesc = model.forces_asm.assemble_by_variable(
+            {"forces/t": timec, "forces/E": strainc}).torch()
+    else:
+        tempc = torch.ones_like(timec)*temperature
+        forcesc = model.forces_asm.assemble_by_variable(
+            {"forces/t": timec, "forces/E": strainc,"forces/T":tempc}).torch()
+
 
     initial_statec = torch.zeros((npoints*npart, model.nstate))
+
+    if initial_conditions is not None:
+        # Find the position on the axis of the initial condition and update
+        for key in initial_conditions.keys():
+            ind = model.model.input_axis().variable_names().index(key)
+            initial_statec[:,ind] = initial_conditions[key]
+            #print('{} intial condition set to {}'.format(key,initial_conditions[key]))
+
 
     # Set up the solver.
     solverc = nonlinear.RecursiveNonlinearEquationSolver(
@@ -112,7 +132,7 @@ def calculate_stress_sensitivity(param_group: Group
     # Reshape the output and apply mask.
     out_stress = np.ones((nstep,)+mask.shape+(6,npart))*np.nan
 
-    out_stress[:,mask,:,:] = resc.cpu().detach().numpy().reshape(nstep,npoints,npart,resc.shape[-1],order='F').swapaxes(-2,-1)[:,:,:6,:]
+    out_stress[:,mask,:,:] = resc.cpu().detach().numpy().reshape(nstep,npoints,npart,7,order='F').swapaxes(-2,-1)[:,:,:6,:]
     
     sensitivity = np.empty((nstep,mask.shape[0],mask.shape[1],6,param_group.n_var))
     for i in range(1,param_group.n_var+1):
@@ -126,12 +146,8 @@ def calculate_stress_sensitivity(param_group: Group
         return sensitivity
     
 
-
-    
-
 def generate_sensitivity_based_virtual_fields(sensitivity: np.ndarray
                                           ,virtual_mesh: dict
-                                          ,mask: np.ndarray
                                        ,options)-> tuple[torch.tensor, torch.tensor]:
   
     """Generate sensitivity based  virtual fields.
@@ -152,34 +168,34 @@ def generate_sensitivity_based_virtual_fields(sensitivity: np.ndarray
     for p in range(sensitivity.shape[4]):
         # note 0, 1, 5 is to take the xx yy and xy components from mandel notation
         refmap = np.moveaxis(sensitivity[...,p][:,...,[0,1,5]],0,-1)
-        VF, VU = virtualfields.sensitivity_vfs(refmap, virtual_mesh, options)
+        VF, VU = virtualfields.sensitivity_vfs(refmap, mesh, options)
         VFs.append(VF)
 
-    nstep = sensitivity.shape[0]
-    npoints=  np.sum(mask)
     # Convert the fields to torch tensors.
-    VFEtorch = torch.empty((nstep,npoints,3,len(VFs)))
-    VFUtorch = torch.empty((nstep,2,4,len(VFs)))
+    VFEtorch = torch.empty(e.shape[:2]+(3,len(VFs)))
+    VFUtorch = torch.empty((e.shape[0],2,4,len(VFs)))
 
     for v, VF in enumerate(VFs):
-        VFEtorch[:,:,:,v] = torch.tensor(np.moveaxis(VF['eps'][mask,:,:],-1,0))
+        VFEtorch[:,:,:,v] = torch.tensor(np.moveaxis(VF['eps'][dicdata.mask,:,:],-1,0))
         VFUtorch[:,:,:,v] = torch.tensor(VF['u'])
 
     # Remove NaNs as causes errors with autograd
     VFEtorch[VFEtorch.isnan()]=0
 
     return VFEtorch, VFUtorch
-    
+
 
 def setup_model(model_path:Path
                 ,dicdata: DICData
                 ,param_group: Group
+                ,initial_conditions = None
+                ,temperature = None
                 ,nchunk=1):
     """Set up the NEML2 for a given set of dic data.
 
     Args:
-        model_path (Path): Path to the NEML2 .i input file.
-        dicdata (DICData): _description_
+        model_path (_type_): _description_
+        dicdata (_type_): _description_
         param_group (Group): Parameters that are to be optimised.
         nchunk (int, optional): Number of chunks for the solver, can impact solve performance. Defaults to 1.
 
@@ -195,6 +211,8 @@ def setup_model(model_path:Path
     exz = Scalar(torch.tensor(dicdata.exz[:,dicdata.mask]))
     exy = Scalar(torch.tensor(dicdata.exy[:,dicdata.mask]))
     e = SR2.fill(exx, eyy, ezz, eyz, exz, exy).torch()
+
+    print(e.shape)
 
     time = torch.tensor(np.expand_dims(np.tile(dicdata.time,(e.shape[1],1)).T,-1))
 
@@ -224,11 +242,23 @@ def setup_model(model_path:Path
     nstep,npoints,tmp = e.shape
 
     # Prescribed forces
-    forces = pyzag_model.forces_asm.assemble_by_variable(
-        {"forces/t": time, "forces/E": e}).torch()
+    if temperature is None:
+        forces = pyzag_model.forces_asm.assemble_by_variable(
+            {"forces/t": time, "forces/E": e}).torch()
+    else:
+        print('Temperature set to: {}K'.format(temperature))
+        temp = torch.ones_like(time)*temperature
+        forces = pyzag_model.forces_asm.assemble_by_variable(
+            {"forces/t": time, "forces/E": e,"forces/T":temp}).torch()
 
     initial_state = torch.zeros((npoints, pyzag_model.nstate))
 
+    if initial_conditions is not None:
+        # Find the position on the axis of the initial condition and update
+        for key in initial_conditions.keys():
+            ind = neml2_model.input_axis().variable_names().index(key)
+            initial_state[:,ind] = initial_conditions[key]
+            print('{} intial condition set to {}'.format(key,initial_conditions[key]))
 
     solver = nonlinear.RecursiveNonlinearEquationSolver(
         pyzag_model,
@@ -241,7 +271,6 @@ def setup_model(model_path:Path
 
 
     return pyzag_model, solver, initial_state, forces
-
 
 def run_model(model:neml2.pyzag.NEML2PyzagModel
               ,solver:nonlinear.RecursiveNonlinearEquationSolver
