@@ -148,6 +148,7 @@ def calculate_stress_sensitivity(param_group: Group
 
 def generate_sensitivity_based_virtual_fields(sensitivity: np.ndarray
                                           ,virtual_mesh: dict
+                                          ,nan_mask
                                        ,options)-> tuple[torch.tensor, torch.tensor]:
   
     """Generate sensitivity based  virtual fields.
@@ -172,11 +173,11 @@ def generate_sensitivity_based_virtual_fields(sensitivity: np.ndarray
         VFs.append(VF)
 
     # Convert the fields to torch tensors.
-    VFEtorch = torch.empty(e.shape[:2]+(3,len(VFs)))
-    VFUtorch = torch.empty((e.shape[0],2,4,len(VFs)))
+    VFEtorch = torch.empty((sensitivity.shape[0],np.sum(nan_mask),3,len(VFs)))
+    VFUtorch = torch.empty((sensitivity.shape[0],2,4,len(VFs)))
 
     for v, VF in enumerate(VFs):
-        VFEtorch[:,:,:,v] = torch.tensor(np.moveaxis(VF['eps'][dicdata.mask,:,:],-1,0))
+        VFEtorch[:,:,:,v] = torch.tensor(np.moveaxis(VF['eps'][nan_mask,:,:],-1,0))
         VFUtorch[:,:,:,v] = torch.tensor(VF['u'])
 
     # Remove NaNs as causes errors with autograd
