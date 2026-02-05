@@ -134,10 +134,22 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     
     # Global Data
-    force = f['DIC Data/Temporal Data/{}'.format(force_col)][()].squeeze()
-    time = f['DIC Data/Temporal Data/{}'.format(time_col)][()].squeeze()
+    if force_col is not None:
+        try:
+            force = f['DIC Data/Temporal Data/{}'.format(force_col)][()].squeeze()
+            data.force = force[indices]
+        except (KeyError):
+            print('Field: {} not found in dataset. Available temporal fields are:'.format(force_col))
+            print(list(f['DIC Data/Temporal Data'].keys()))
 
-    nstep = len(force)
+    if time_col is not None:
+        try:
+            time = f['DIC Data/Temporal Data/{}'.format(time_col)][()].squeeze()
+            data.time = time[indices]
+        except (KeyError):
+            print('Field: {} not found in dataset. Available temporal fields are:'.format(time_col))
+            print(list(f['DIC Data/Temporal Data'].keys()))
+    nstep = len(f['DIC Data/Temporal Data/Current Image'][()].squeeze())
 
     if indices is None:
         indices = np.arange(nstep)
@@ -146,8 +158,8 @@ def matchid_hdf5_to_dicdata(filepath : Path,strain_tensor='Logaritmic Euler-Alma
 
     data.nstep = nstep
 
-    data.force = force[indices]
-    data.time = time[indices]
+    
+    
 
     
 

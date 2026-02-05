@@ -316,3 +316,40 @@ def load_lookup(fileformat: str)->Callable[[Path],pd.DataFrame]:
                    'Davis'    :read_load_file}
     return lookup_dict[fileformat]
 
+
+def read_matchid_cal(filename):
+    with open(filename,'r') as f:
+        lines = f.readlines()
+
+    cam0_intr = np.array(lines[8].strip('>\n').split(';')[1:],dtype=float)
+    cam1_intr = np.array(lines[18].strip('>\n').split(';')[1:],dtype=float)
+    extr = np.array(lines[24].strip('>\n').split('<')[-1].split(';'),dtype=float)
+
+    cal_dict = {'fx_0': cam0_intr[0],
+                'fy_0': cam0_intr[1],
+                'fs_0': cam0_intr[2],
+                'k1_0': cam0_intr[3], 
+                'k2_0': cam0_intr[4],
+                'p1_0': cam0_intr[5],
+                'p2_0': cam0_intr[6],
+                'cx_0': cam0_intr[7],
+                'cy_0': cam0_intr[8],
+
+                'fx_1': cam1_intr[0],
+                'fy_1': cam1_intr[1],
+                'fs_1': cam1_intr[2],
+                'k1_1': cam1_intr[3], 
+                'k2_1': cam1_intr[4],
+                'p1_1': cam1_intr[5],
+                'p2_1': cam1_intr[6],
+                'cx_1': cam1_intr[7],
+                'cy_1': cam1_intr[8],
+                
+                'tx': extr[0],
+                'ty': extr[1],
+                'tz': extr[2],
+                'theta': extr[3],
+                'phi': extr[4],
+                'psi': extr[5]
+                }
+    return cal_dict
