@@ -325,31 +325,34 @@ def read_matchid_cal(filename):
     cam1_intr = np.array(lines[18].strip('>\n').split(';')[1:],dtype=float)
     extr = np.array(lines[24].strip('>\n').split('<')[-1].split(';'),dtype=float)
 
-    cal_dict = {'fx_0': cam0_intr[0],
-                'fy_0': cam0_intr[1],
-                'fs_0': cam0_intr[2],
-                'k1_0': cam0_intr[3], 
-                'k2_0': cam0_intr[4],
-                'p1_0': cam0_intr[5],
-                'p2_0': cam0_intr[6],
-                'cx_0': cam0_intr[7],
-                'cy_0': cam0_intr[8],
-
-                'fx_1': cam1_intr[0],
-                'fy_1': cam1_intr[1],
-                'fs_1': cam1_intr[2],
-                'k1_1': cam1_intr[3], 
-                'k2_1': cam1_intr[4],
-                'p1_1': cam1_intr[5],
-                'p2_1': cam1_intr[6],
-                'cx_1': cam1_intr[7],
-                'cy_1': cam1_intr[8],
-                
-                'tx': extr[0],
+    cam0 ={'fx': cam0_intr[0],
+            'fy': cam0_intr[1],
+            'fs': cam0_intr[2],
+            'k1': cam0_intr[3], 
+            'k2': cam0_intr[4],
+            'p1': cam0_intr[5],
+            'p2': cam0_intr[6],
+            'cx': cam0_intr[7],
+            'cy': cam0_intr[8]}
+    
+    cam1 =  {'fx': cam1_intr[0],
+            'fy': cam1_intr[1],
+            'fs': cam1_intr[2],
+            'k1': cam1_intr[3], 
+            'k2': cam1_intr[4],
+            'p1': cam1_intr[5],
+            'p2': cam1_intr[6],
+            'cx': cam1_intr[7],
+            'cy': cam1_intr[8]}
+    
+    extrinsic = {'tx': extr[0],
                 'ty': extr[1],
                 'tz': extr[2],
                 'theta': extr[3],
                 'phi': extr[4],
-                'psi': extr[5]
-                }
+                'psi': extr[5]}
+
+    cal_dict = {'cam0':cam0,
+                'cam1':cam1,
+                'extr':extrinsic}
     return cal_dict
