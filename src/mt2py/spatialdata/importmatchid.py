@@ -330,20 +330,22 @@ def read_matchid_cal(filename):
             'fs': cam0_intr[2],
             'k1': cam0_intr[3], 
             'k2': cam0_intr[4],
-            'p1': cam0_intr[5],
-            'p2': cam0_intr[6],
-            'cx': cam0_intr[7],
-            'cy': cam0_intr[8]}
+            'k3': cam0_intr[5],
+            'p1': cam0_intr[6],
+            'p2': cam0_intr[7],
+            'cx': cam0_intr[8],
+            'cy': cam0_intr[9]}
     
     cam1 =  {'fx': cam1_intr[0],
             'fy': cam1_intr[1],
             'fs': cam1_intr[2],
             'k1': cam1_intr[3], 
             'k2': cam1_intr[4],
-            'p1': cam1_intr[5],
-            'p2': cam1_intr[6],
-            'cx': cam1_intr[7],
-            'cy': cam1_intr[8]}
+            'k3': cam1_intr[5],
+            'p1': cam1_intr[6],
+            'p2': cam1_intr[7],
+            'cx': cam1_intr[8],
+            'cy': cam1_intr[9]}
     
     extrinsic = {'tx': extr[0],
                 'ty': extr[1],
