@@ -19,9 +19,9 @@ from scipy import ndimage
 import matplotlib.image as mplim
 from PIL import Image
 
-from pyvale.imagesim.imagedefopts import ImageDefOpts
-from pyvale.imagesim.cameradata import CameraData
-from pyvale.imagesim.alphashape import alphashape
+from mt2py.imagesim.imagedefopts import ImageDefOpts
+from mt2py.imagesim.cameradata import CameraData
+from mt2py.imagesim.alphashape import alphashape
 
 (XI,YI) = (0,1)
 

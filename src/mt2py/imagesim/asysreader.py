@@ -8,7 +8,7 @@ Copyright (C) 2024 The Computer Aided Validation Team
 '''
 import os
 import numpy as np
-import pyvale.imagesim.textreader as tr
+import mt2py.imagesim.textreader as tr
 
 # CLASS DEFINITIONS
 class Options:

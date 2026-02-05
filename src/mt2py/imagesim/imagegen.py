@@ -7,8 +7,8 @@ Copyright (C) 2024 The Computer Aided Validation Team
 '''
 
 import numpy as np
-from pyvale.imagesim.cameradata import CameraData
-import pyvale.imagesim.imagedef as sid
+from mt2py.imagesim.cameradata import CameraData
+import mt2py.imagesim.imagedef as sid
 
 def gen_grid_image(camera: CameraData,
                    px_per_period: int,
