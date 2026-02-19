@@ -75,10 +75,18 @@ def get_by_bounding_box(dicdata: DICData,bounding_box:tuple[tuple,tuple,tuple])-
 
     trimdata.mask = dicdata.mask[filter].reshape(y_size,x_size)
 
-    trimdata.exx = dicdata.exx[:,filter].reshape(-1,y_size,x_size)
-    trimdata.eyy = dicdata.eyy[:,filter].reshape(-1,y_size,x_size)
-    trimdata.exy = dicdata.exy[:,filter].reshape(-1,y_size,x_size)
-
+    if dicdata.exx is not None:
+        trimdata.exx = dicdata.exx[:,filter].reshape(-1,y_size,x_size)
+    if dicdata.eyy is not None:  
+        trimdata.eyy = dicdata.eyy[:,filter].reshape(-1,y_size,x_size)
+    if dicdata.exy is not None:
+        trimdata.exy = dicdata.exy[:,filter].reshape(-1,y_size,x_size)
+    if dicdata.exz is not None:
+        trimdata.exz = dicdata.exz[:,filter].reshape(-1,y_size,x_size)
+    if dicdata.eyz is not None:
+        trimdata.eyz = dicdata.eyz[:,filter].reshape(-1,y_size,x_size)
+    if dicdata.ezz is not None:
+        trimdata.ezz = dicdata.ezz[:,filter].reshape(-1,y_size,x_size)
     return trimdata
 
 
