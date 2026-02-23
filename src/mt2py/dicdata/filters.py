@@ -136,7 +136,7 @@ def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='s
             mask = ~np.isnan(point_data[:,:,0])
 
             # If the VSG is less than half full 
-            if mask.size < (window_size**2):
+            if np.sum(mask) < (window_size**2):
                 dudx[:,j,i] = np.nan
                 dudy[:,j,i] = np.nan
                 dvdx[:,j,i] = np.nan
