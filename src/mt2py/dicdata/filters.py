@@ -198,7 +198,7 @@ def update_mask(dicdata:DICData,new_mask)->None:
     """ Updates the dicdata mask and adds NaNs in to all the relevant fields. 
     """
 
-    dicdata.mask = ~new_mask
+    dicdata.mask = new_mask
     dicdata.x[~new_mask] = np.nan
     dicdata.y[~new_mask] = np.nan
     if dicdata.y is not None:
