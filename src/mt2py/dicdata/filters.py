@@ -192,3 +192,34 @@ def add_force_noise(dicdata:DICData,deviation:float=5e-3)->None:
     """
     force_noise = 1+(np.random.rand(len(dicdata.force))*2*deviation)-deviation
     dicdata.force = dicdata.force*force_noise
+
+
+def update_mask(dicdata:DICData,new_mask)->None:
+    """ Updates the dicdata mask and adds NaNs in to all the relevant fields. 
+    """
+
+    dicdata.mask = new_mask
+    dicdata.x[new_mask] = np.nan
+    dicdata.y[new_mask] = np.nan
+    if dicdata.y is not None:
+        dicdata.y[new_mask] = np.nan
+
+    dicdata.u[:,new_mask] = np.nan
+    dicdata.v[:,new_mask] = np.nan
+    if dicdata.w is not None:
+        dicdata.w[:,new_mask] = np.nan
+
+    if dicdata.exx is not None:
+        dicdata.exx[:,new_mask] = np.nan
+    if dicdata.eyy is not None:
+        dicdata.eyy[:,new_mask] = np.nan
+    if dicdata.ezz is not None:
+        dicdata.ezz[:,new_mask] = np.nan
+    if dicdata.eyz is not None:
+        dicdata.eyz[:,new_mask] = np.nan
+    if dicdata.exz is not None:
+        dicdata.exz[:,new_mask] = np.nan
+    if dicdata.exy is not None:
+        dicdata.exy[:,new_mask] = np.nan
+
+    
