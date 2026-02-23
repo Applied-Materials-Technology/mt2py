@@ -85,7 +85,7 @@ def small_strain(dudx,dudy,dvdx,dvdy):
     exy = 0.5*(dudy + dvdx)
     return exx,eyy,exy
 
-def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='small')->tuple[npt.NDArray,npt.NDArray,npt.NDArray]:
+def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='small',partial_subsets=False)->tuple[npt.NDArray,npt.NDArray,npt.NDArray]:
     """_summary_
 
     Args:
@@ -134,9 +134,14 @@ def windowed_strain(dicdata:DICData,window_size:int,order='Q4',strain_tensor ='s
 
             # Lstsq cant handle nans
             mask = ~np.isnan(point_data[:,:,0])
+            
+            #Partial subset fill
+            fill_limit = (window_size**2)
+            if partial_subsets:
+                fill_limit= (window_size**2)/2
 
             # If the VSG is less than half full 
-            if np.sum(mask) < (window_size**2):
+            if np.sum(mask) < fill_limit:
                 dudx[:,j,i] = np.nan
                 dudy[:,j,i] = np.nan
                 dvdx[:,j,i] = np.nan
