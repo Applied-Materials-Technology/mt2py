@@ -8,7 +8,7 @@ netCDF4==1.7.2
 numba==0.62.0
 numpy==2.3.3
 pandas==2.3.2
-Pillow==11.3.0
+pillow>=12.2.0
 pymoo==0.6.1.5
 pytest==7.4.3
 pyvale==2025.8.1
